@@ -1,12 +1,12 @@
-<p align="center"><img src="App/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="120" alt="Unofficial herdr App icon"></p>
+<p align="center"><img src="App/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="120" alt="Shepherd app icon"></p>
 
-<h1 align="center">Unofficial herdr App</h1>
+<h1 align="center">Shepherd</h1>
 
-<p align="center">Keep an eye on your <a href="https://herdr.dev">herdr</a> agents on the go: connect over SSH, read chats, reply, approve – even by voice.</p>
+<p align="center"><strong>An unofficial iPhone client for herdr</strong></p>
 
-<p align="center"><em>An unofficial iPhone companion for the herdr agent multiplexer, for Claude Code and Codex agents running on your own servers.</em></p>
+<p align="center">Keep an eye on your <a href="https://herdr.dev">herdr</a> agents (Claude Code, Codex, …) on the go: connect over SSH, read chats, reply, approve – even by voice.</p>
 
-> **Unofficial project.** This app is not made, affiliated with or endorsed by the herdr project or its authors. “herdr” is used only to describe what the app works with.
+> **Unofficial project.** Shepherd is not made, affiliated with or endorsed by the herdr project or its authors. “herdr” is used only to describe what the app works with.
 
 ---
 
@@ -44,8 +44,8 @@
 ## Installation
 
 ```sh
-git clone https://github.com/Tibilz/unofficial-herdr-app.git
-cd unofficial-herdr-app
+git clone https://github.com/Tibilz/shepherd-ios.git
+cd shepherd-ios
 ./scripts/generate.sh        # creates HerdrApp.xcodeproj
 open HerdrApp.xcodeproj
 ```
@@ -87,14 +87,14 @@ ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
 
 If the fingerprint changes later, the app refuses to connect. You can reset it in the server settings.
 
-**VPN:** if your server sits behind WireGuard, Cisco Secure Client or OpenVPN (Tunnelblick users: *OpenVPN Connect* on iOS), connect that VPN app first. Then use the server's internal address in herdr.
+**VPN:** if your server sits behind WireGuard, Cisco Secure Client or OpenVPN (Tunnelblick users: *OpenVPN Connect* on iOS), connect that VPN app first. Then use the server's internal address in Shepherd.
 
 ### 3. Notifications (optional)
 
 Push notifications go through [ntfy](https://ntfy.sh), because the app's own push notifications would require a paid Apple account.
 
 1. Install the free **ntfy** app on your iPhone.
-2. In herdr, open a server and tap **⋯ → Notifications → Set Up**. The app shows what it will change on the server before it does anything.
+2. In Shepherd, open a server and tap **⋯ → Notifications → Set Up**. The app shows what it will change on the server before it does anything.
 3. In ntfy, subscribe to the topic shown, or scan the QR code. Then tap **Send Test Notification**.
 
 Tapping a notification opens that agent directly. There are switches for all notifications, for each event and for each agent; the bell in the agent view toggles that agent.

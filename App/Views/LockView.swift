@@ -10,8 +10,9 @@ struct LockView: View {
                 .font(.system(size: 64))
                 .foregroundStyle(.tint)
             VStack(spacing: 4) {
-                Text("Unofficial herdr App").font(.largeTitle.bold()).multilineTextAlignment(.center)
-                Text("Not affiliated with the herdr project").font(.footnote).foregroundStyle(.secondary)
+                Text("Shepherd").font(.largeTitle.bold())
+                Text("Unofficial client for herdr · not affiliated with the herdr project")
+                    .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
             Text("Unlock the app to use your SSH keys.")
                 .multilineTextAlignment(.center)

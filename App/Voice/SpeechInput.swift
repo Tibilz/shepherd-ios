@@ -35,11 +35,11 @@ final class SpeechInput {
         func stillWanted() throws { if gen != generation { throw CancellationError() } }
         do {
             guard await AVAudioApplication.requestRecordPermission() else {
-                throw Problem("No microphone access. Allow it in Settings → herdr (unoff.) → Microphone.")
+                throw Problem("No microphone access. Allow it in Settings → Shepherd → Microphone.")
             }
             try stillWanted()
             guard await Self.speechAuthorized() else {
-                throw Problem("No permission for speech recognition. Allow it in Settings → herdr (unoff.).")
+                throw Problem("No permission for speech recognition. Allow it in Settings → Shepherd.")
             }
             guard let locale = await DictationTranscriber.supportedLocale(equivalentTo: Locale(identifier: Self.localeIdentifier)) else {
                 throw Problem("This language is not supported for speech recognition.")
