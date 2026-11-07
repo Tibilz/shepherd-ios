@@ -9,7 +9,10 @@ struct LockView: View {
             Image(systemName: "lock.shield")
                 .font(.system(size: 64))
                 .foregroundStyle(.tint)
-            Text("herdr").font(.largeTitle.bold())
+            VStack(spacing: 4) {
+                Text("Unofficial herdr App").font(.largeTitle.bold()).multilineTextAlignment(.center)
+                Text("Not affiliated with the herdr project").font(.footnote).foregroundStyle(.secondary)
+            }
             Text("Unlock the app to use your SSH keys.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)

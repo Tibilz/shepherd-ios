@@ -26,7 +26,7 @@ struct SettingsView: View {
                 }
                 Section("About") {
                     LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")
-                    Text("App icon: herdr logo, Apache-2.0 (herdrdev/herdr)").font(.footnote).foregroundStyle(.secondary)
+                    Text("Unofficial app. Not affiliated with or endorsed by the herdr project.").font(.footnote).foregroundStyle(.secondary)
                 }
             }
             .navigationTitle("Settings")

@@ -1,10 +1,12 @@
-<p align="center"><img src="App/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="120" alt="herdr app icon"></p>
+<p align="center"><img src="App/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="120" alt="Unofficial herdr App icon"></p>
 
-<h1 align="center">herdr for iPhone</h1>
+<h1 align="center">Unofficial herdr App</h1>
 
 <p align="center">Keep an eye on your <a href="https://herdr.dev">herdr</a> agents on the go: connect over SSH, read chats, reply, approve – even by voice.</p>
 
 <p align="center"><em>An unofficial iPhone companion for the herdr agent multiplexer, for Claude Code and Codex agents running on your own servers.</em></p>
+
+> **Unofficial project.** This app is not made, affiliated with or endorsed by the herdr project or its authors. “herdr” is used only to describe what the app works with.
 
 ---
 
@@ -42,8 +44,8 @@
 ## Installation
 
 ```sh
-git clone https://github.com/Tibilz/herdr-ios.git
-cd herdr-ios
+git clone https://github.com/Tibilz/unofficial-herdr-app.git
+cd unofficial-herdr-app
 ./scripts/generate.sh        # creates HerdrApp.xcodeproj
 open HerdrApp.xcodeproj
 ```
@@ -167,7 +169,7 @@ If a slow connection keeps Xcode from fetching the large dependencies (`swift-ni
 
 ## Notes
 
-- This is an unofficial project and not affiliated with herdr. The app icon is based on the herdr logo (Apache-2.0, see [NOTICE](NOTICE)).
+- This is an unofficial community project. It is not affiliated with or endorsed by herdr. The app icon is an original design.
 - Tested with herdr 0.9.5 and Claude Code 2.1 on Ubuntu.
 
 ## License
