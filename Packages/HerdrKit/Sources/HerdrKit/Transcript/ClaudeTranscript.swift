@@ -1,13 +1,13 @@
 import Foundation
 
-public enum TranscriptSegment: Equatable, Sendable {
+public enum TranscriptSegment: Hashable, Sendable {
     /// Reflowed text (hard terminal wraps joined); may contain inline markdown like `code`.
     case prose(String)
     /// Kept as-is, e.g. box-drawn tables.
     case preformatted(String)
 }
 
-public enum TranscriptBlock: Equatable, Sendable {
+public enum TranscriptBlock: Hashable, Sendable {
     case user(String)
     case assistant([TranscriptSegment])
     case tool(title: String, detail: String)
@@ -16,6 +16,17 @@ public enum TranscriptBlock: Equatable, Sendable {
     case recap(String)
     /// Anything not recognised, shown verbatim so nothing is lost (e.g. permission dialogs).
     case other(String)
+
+    /// Claude's live spinner line while it works ("Thinking… (12s · esc to interrupt)"), as opposed to a
+    /// finished timing like "Crunched for 41s".
+    public var isActivity: Bool {
+        guard case .meta(let m) = self else { return false }
+        return m.range(of: #"^[A-Za-z]+ing\b"#, options: .regularExpression) != nil
+    }
+
+    fileprivate var isAnchor: Bool {
+        switch self { case .user, .assistant, .tool: true; default: false }
+    }
 }
 
 /// Turns the text of a Claude Code screen (herdr `agent.read`, ANSI stripped) into chat blocks.
@@ -30,6 +41,17 @@ public enum ClaudeTranscript {
         // Short screens never reach the wrap column; no real terminal is narrower than 60.
         let width = max(60, rawBlocks.flatMap(\.proseLines).map(\.count).max() ?? 0)
         return rawBlocks.map { $0.finish(width: width) }
+    }
+
+    /// While an agent works herdr only returns the visible screen. This puts that screen behind the
+    /// last full history: the first chat block of the screen that also occurs in the history (its most
+    /// recent occurrence) joins them. Without overlap the screen is appended.
+    public static func merge(history: [TranscriptBlock], screen: [TranscriptBlock]) -> [TranscriptBlock] {
+        guard !history.isEmpty else { return screen }
+        for (k, block) in screen.enumerated() where block.isAnchor {
+            if let i = history.lastIndex(of: block) { return Array(history[..<i]) + screen[k...] }
+        }
+        return history + screen
     }
 
     // MARK: - Raw blocks

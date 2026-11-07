@@ -1,6 +1,7 @@
 import Foundation
 import HerdrKit
 import HerdrSSH
+import Network
 import Observation
 import SwiftUI
 
@@ -48,6 +49,13 @@ final class AppModel {
     /// The agent detail currently on screen; no banner for it.
     var visibleAgent: (server: UUID, target: String)?
     private var bannerTask: Task<Void, Never>?
+    /// False while the iPhone has no network at all (Wi-Fi and cellular off); errors then show as "offline".
+    private(set) var isOnline = true
+    private let pathMonitor = NWPathMonitor()
+    /// Last chat per agent ("server/target"), so reopening shows it at once and history survives busy reads.
+    var transcripts: [String: [TranscriptBlock]] = [:]
+    /// Where the user left each chat: nil = at the bottom, else the id of the top visible block.
+    var chatScroll: [String: String] = [:]
 
     let keyStore = KeychainKeyStore()
     let lock: AppLock
@@ -71,6 +79,18 @@ final class AppModel {
         keys = keyRefStore.load() ?? []
         knownHosts = knownHostsStore.load() ?? KnownHosts()
         lock = AppLock(keyStore: keyStore)
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            let online = path.status == .satisfied
+            Task { @MainActor in self?.setOnline(online) }
+        }
+        pathMonitor.start(queue: DispatchQueue(label: "shepherd.network"))
+    }
+
+    private func setOnline(_ online: Bool) {
+        guard online != isOnline else { return }
+        isOnline = online
+        // Back online: reconnect everything that dropped meanwhile.
+        if online && !lock.isLocked { reconnectToken += 1 }
     }
 
     // MARK: - Lifecycle
@@ -128,6 +148,11 @@ final class AppModel {
             servers.append(p)
         }
         try serverStore.save(servers)
+    }
+
+    func moveServers(from source: IndexSet, to destination: Int) {
+        servers.move(fromOffsets: source, toOffset: destination)
+        try? serverStore.save(servers)
     }
 
     func deleteServer(_ id: UUID) throws {

@@ -19,9 +19,12 @@
   - Tool calls collapse, and wide tables scroll sideways.
   - You can switch to the raw output at any time.
 - **Reply and approve:** send prompts and answer approval dialogs with ↑ ↓ Enter, 1/2/3, y/n or Esc.
+- **Live chats:** the chat updates by itself, shows what the agent is doing right now ("Thinking…"), stays at the newest message if you were there and otherwise keeps your place. An arrow jumps back down.
+- **Organize:** swipe a chat or terminal to rename or close it (closing asks first). Sort by workspace, newest, oldest, folder or agent; reorder servers with Edit.
 - **Rename chats:** use any text you like. The name also shows up in herdr on your desktop.
 - **Start new agents:** browse the server's folders like in the Files app, then tap "Claude Code" or "Codex".
-- **Real terminal:** full terminal emulation (SwiftTerm) with a row of special keys.
+- **Real terminal:** full terminal emulation (SwiftTerm) with a row of special keys. Plain terminal panes open directly.
+- **Offline-aware:** without network you see "No Internet Connection" instead of errors, and Shepherd reconnects when you're back.
 - **Voice control:** say things like "go to agent 2", "show me the folders" or "summarize what the agent did". The answer comes as text or is read aloud. Voice works in English and German.
 - **Notifications:** get a push when an agent needs you or is done. You can switch them per agent or globally. They are delivered via [ntfy](https://ntfy.sh).
 - **No paid Apple developer account needed:** install with a free Apple ID.

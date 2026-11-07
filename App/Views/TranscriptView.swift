@@ -5,14 +5,53 @@ import SwiftUI
 /// tool calls collapsed, timings small. Unknown parts stay visible verbatim.
 struct TranscriptView: View {
     let blocks: [TranscriptBlock]
+    /// The agent is working: its live spinner line ("Thinking…") is shown as an activity row.
+    var working = false
+
+    /// Stable per content, so a saved scroll position still finds its block after new output arrives.
+    static func ids(for blocks: [TranscriptBlock]) -> [String] {
+        var seen: [Int: Int] = [:]
+        return blocks.map { b in
+            let h = b.hashValue
+            seen[h, default: 0] += 1
+            return "\(h)-\(seen[h]!)"
+        }
+    }
 
     var body: some View {
-        LazyVStack(alignment: .leading, spacing: 14) {
-            ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
-                TranscriptBlockView(block: block)
+        let ids = Self.ids(for: blocks)
+        let activity = working ? blocks.lastIndex(where: \.isActivity).flatMap { $0 >= blocks.count - 3 ? $0 : nil } : nil
+        // VStack, not Lazy: exact heights, so "scroll to bottom" lands at the real bottom.
+        VStack(alignment: .leading, spacing: 14) {
+            ForEach(blocks.indices, id: \.self) { i in
+                Group {
+                    if i == activity, case .meta(let text) = blocks[i] {
+                        WorkingRow(text: text)
+                    } else {
+                        TranscriptBlockView(block: blocks[i])
+                    }
+                }
+                .id(ids[i])
             }
+            if working && activity == nil { WorkingRow(text: nil) }
         }
+        .scrollTargetLayout()
         .textSelection(.enabled)
+    }
+}
+
+/// The agent is busy: spinner plus Claude's status line ("Thinking… (12s · esc to interrupt)").
+struct WorkingRow: View {
+    let text: String?
+    var body: some View {
+        HStack(spacing: 8) {
+            ProgressView().controlSize(.small)
+            Text(text ?? "Working…").font(.footnote).foregroundStyle(.secondary).lineLimit(2)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 8)
+        .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -90,34 +129,59 @@ private func markdown(_ raw: String) -> AttributedString {
     return (try? AttributedString(markdown: s, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(s)
 }
 
-// MARK: - Renaming chats
+// MARK: - Renaming chats and terminals
+
+/// What the rename prompt edits: a pane's free-text label (visible in herdr too).
+struct RenameItem: Identifiable, Equatable {
+    let paneId: String
+    let label: String?
+    /// Shown as placeholder: what appears when the label is empty.
+    let fallback: String
+    let isAgent: Bool
+    var id: String { paneId }
+
+    init(_ item: ChatItem) {
+        paneId = item.paneId
+        label = item.agent?.label ?? item.pane.label
+        isAgent = item.agent != nil
+        fallback = item.agent.map { $0.chatTitle ?? $0.name ?? $0.kindLabel } ?? item.pane.terminalTitleStripped.flatMap { $0.isEmpty ? nil : $0 } ?? "Terminal"
+    }
+
+    init(agent: Agent) {
+        paneId = agent.paneId
+        label = agent.label
+        isAgent = true
+        fallback = agent.chatTitle ?? agent.name ?? agent.kindLabel
+    }
+}
 
 extension View {
-    /// Presents a rename prompt while `agent` is set. Saves to the pane label (free text, visible in herdr too).
-    func renameChat(_ agent: Binding<Agent?>, session: LiveSession?) -> some View {
-        modifier(RenameChat(agent: agent, session: session))
+    /// Presents a rename prompt while `item` is set.
+    func renameChat(_ item: Binding<RenameItem?>, session: LiveSession?) -> some View {
+        modifier(RenameChat(item: item, session: session))
     }
 }
 
 private struct RenameChat: ViewModifier {
-    @Binding var agent: Agent?
+    @Binding var item: RenameItem?
     let session: LiveSession?
-    @State private var editing: Agent?
+    @State private var editing: RenameItem?
     @State private var text = ""
     @State private var error: String?
 
     func body(content: Content) -> some View {
         content
-            .onChange(of: agent?.paneId) { _, _ in
-                if let agent { editing = agent; text = agent.label ?? "" }
+            .onChange(of: item) { _, new in
+                if let new { editing = new; text = new.label ?? "" }
             }
-            .alert("Rename Chat", isPresented: Binding(get: { agent != nil }, set: { if !$0 { agent = nil } })) {
-                TextField(editing?.chatTitle ?? editing?.displayName ?? "Name", text: $text)
+            .alert(editing?.isAgent == false ? "Rename Terminal" : "Rename Chat",
+                   isPresented: Binding(get: { item != nil }, set: { if !$0 { item = nil } })) {
+                TextField(editing?.fallback ?? "Name", text: $text)
                 Button("Save") { save(text) }
                 if editing?.label != nil { Button("Remove Name", role: .destructive) { save(nil) } }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Leave empty to show the title from \(editing?.kindLabel ?? "Claude"). The name also appears in herdr on your desktop.")
+                Text("Leave empty to show “\(editing?.fallback ?? "")”. The name also appears in herdr on your desktop.")
             }
             .alert("Rename failed", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
                 Button("Copy") { if let error { ErrorReport.copy(error) } }

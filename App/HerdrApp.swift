@@ -27,6 +27,8 @@ enum Route: Hashable {
 enum TerminalTarget: Hashable {
     case agent(String)
     case session
+    /// A plain shell pane: herdr is opened with that pane focused.
+    case pane(String)
 }
 
 struct RootView: View {

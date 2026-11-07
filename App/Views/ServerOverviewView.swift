@@ -10,43 +10,34 @@ struct ServerOverviewView: View {
     @State private var passphrase = ""
     @State private var connecting = false
     @State private var voice: VoiceCoordinator?
-    @State private var renaming: Agent?
+    @State private var renaming: RenameItem?
+    @State private var closing: ChatItem?
+    @State private var actionError: String?
+    @AppStorage("chatSort") private var sort: ChatSort = .workspace
     @AppStorage("voiceHintSeen") private var voiceHintSeen = false
 
     private var profile: ServerProfile? { model.server(serverId) }
 
     var body: some View {
         List {
-            ConnectionBanner(state: session?.state, error: error, profile: profile, retry: { Task { await connect() } })
+            ConnectionBanner(state: session?.state, error: error, offline: !model.isOnline, profile: profile,
+                             retry: { Task { await connect() } })
             if let snap = session?.snapshot {
-                if !snap.needsAttention.isEmpty {
+                if !snap.attentionItems.isEmpty {
                     Section("Needs You") {
-                        ForEach(snap.needsAttention) { agent in
-                            NavigationLink(value: Route.agent(server: serverId, target: agent.target)) { AgentRow(agent: agent) }
-                                .contextMenu { Button { renaming = agent } label: { Label("Rename", systemImage: "pencil") } }
-                        }
+                        ForEach(snap.attentionItems) { row($0) }
                     }
                 }
-                ForEach(snap.workspaces) { ws in
+                ForEach(snap.chatGroups(sort)) { group in
                     Section {
-                        ForEach(snap.tabs(in: ws)) { tab in
-                            if snap.tabs(in: ws).count > 1 {
-                                Text("Tab \(tab.label)").font(.caption).foregroundStyle(.secondary)
-                            }
-                            ForEach(snap.panes(in: tab)) { pane in
-                                if let agent = snap.agent(onPane: pane.paneId) {
-                                    NavigationLink(value: Route.agent(server: serverId, target: agent.target)) { AgentRow(agent: agent) }
-                                .contextMenu { Button { renaming = agent } label: { Label("Rename", systemImage: "pencil") } }
-                                } else {
-                                    PaneRow(pane: pane)
-                                }
-                            }
-                        }
+                        ForEach(group.items) { row($0) }
                     } header: {
-                        HStack {
-                            Text("\(ws.number) · \(ws.label)")
-                            Spacer()
-                            if ws.agentStatus != .unknown { StatusBadge(status: ws.agentStatus, compact: true) }
+                        if let title = group.title {
+                            HStack {
+                                Text(title)
+                                Spacer()
+                                if let st = group.status, st != .unknown { StatusBadge(status: st, compact: true) }
+                            }
                         }
                     }
                 }
@@ -54,14 +45,37 @@ struct ServerOverviewView: View {
                     ContentUnavailableView("No Workspaces", systemImage: "square.dashed",
                                            description: Text("This herdr session has no workspaces yet."))
                 }
-            } else if connecting {
+            } else if connecting && model.isOnline {
                 HStack { ProgressView(); Text("Connecting …").foregroundStyle(.secondary) }
             }
         }
+        .animation(.default, value: sort)
+        .confirmationDialog(closing.map { "Close “\($0.title)”?" } ?? "",
+                            isPresented: Binding(get: { closing != nil }, set: { if !$0 { closing = nil } }),
+                            titleVisibility: .visible, presenting: closing) { item in
+            Button(item.agent == nil ? "Close Terminal" : "Close Agent", role: .destructive) { Task { await close(item) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { item in
+            Text(item.agent == nil
+                 ? "Closes this terminal in herdr and ends what runs in it."
+                 : "Ends \(item.agent?.kindLabel ?? "the agent") and closes its pane in herdr. The chat can't be reopened.")
+        }
+        .alert("Couldn't Close", isPresented: Binding(get: { actionError != nil }, set: { if !$0 { actionError = nil } })) {
+            Button("Copy") { if let actionError { ErrorReport.copy(actionError) } }
+            Button("OK", role: .cancel) {}
+        } message: { Text(actionError ?? "") }
         .navigationTitle(profile?.name ?? "Server")
         .renameChat($renaming, session: session)
         .refreshable { await session?.refresh() }
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Picker("Sort", selection: $sort) {
+                        ForEach(ChatSort.allCases, id: \.self) { Text($0.label).tag($0) }
+                    }
+                } label: { Label("Sort", systemImage: "arrow.up.arrow.down") }
+                .disabled(session?.snapshot == nil)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink(value: Route.folder(server: serverId, path: nil)) {
                     Label("Start Agent", systemImage: "plus")
@@ -123,6 +137,35 @@ struct ServerOverviewView: View {
         } message: { Text("The SSH key is protected by a passphrase.") }
     }
 
+    @ViewBuilder
+    private func row(_ item: ChatItem) -> some View {
+        Group {
+            if let agent = item.agent {
+                NavigationLink(value: Route.agent(server: serverId, target: agent.target)) { AgentRow(agent: agent) }
+            } else {
+                NavigationLink(value: Route.terminal(server: serverId, target: .pane(item.paneId))) { PaneRow(item: item) }
+            }
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button { closing = item } label: { Label("Close", systemImage: "xmark") }.tint(.red)
+            Button { renaming = RenameItem(item) } label: { Label("Rename", systemImage: "pencil") }.tint(.blue)
+        }
+        .contextMenu {
+            Button { renaming = RenameItem(item) } label: { Label("Rename", systemImage: "pencil") }
+            Button(role: .destructive) { closing = item } label: { Label("Close", systemImage: "xmark") }
+        }
+    }
+
+    private func close(_ item: ChatItem) async {
+        guard let session else { return }
+        do {
+            try await session.client.closePane(item.paneId)
+            await session.refresh()
+        } catch {
+            actionError = ErrorReport.text(error)
+        }
+    }
+
     private func connect() async {
         guard let profile, !connecting else { return }
         connecting = true
@@ -135,7 +178,7 @@ struct ServerOverviewView: View {
             askPassphrase = true
         } catch is CancellationError {
         } catch {
-            self.error = ErrorReport.text(error)
+            self.error = model.isOnline ? ErrorReport.text(error) : nil
         }
     }
 }
@@ -143,11 +186,14 @@ struct ServerOverviewView: View {
 struct ConnectionBanner: View {
     let state: ConnectionState?
     let error: String?
+    var offline = false
     let profile: ServerProfile?
     let retry: () -> Void
 
     var body: some View {
-        if let message {
+        if offline {
+            Section { OfflineNotice() }
+        } else if let message {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Label("Connection failed", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
@@ -190,23 +236,35 @@ struct AgentRow: View {
 
     /// "claude · ~/projekt" (the kind is left out when it already is the title).
     private var subtitle: String {
-        let path = agent.cwd.map { $0.replacingOccurrences(of: #"^/home/[^/]+"#, with: "~", options: .regularExpression) }
+        let path = HerdrSnapshot.shortPath(agent.cwd)
         let kind = agent.displayName == agent.kindLabel ? nil : agent.kindLabel
         return [kind, path].compactMap { $0 }.joined(separator: " · ")
     }
 }
 
 struct PaneRow: View {
-    let pane: Pane
+    let item: ChatItem
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "terminal").foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 2) {
-                Text(pane.terminalTitleStripped ?? "Shell").font(.subheadline)
-                if let cwd = pane.foregroundCwd ?? pane.cwd {
+                Text(item.title).font(.subheadline).lineLimit(2)
+                if let cwd = HerdrSnapshot.shortPath(item.cwd) {
                     Text(cwd).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
         }
+    }
+}
+
+/// Shown instead of connection errors while the iPhone has no network.
+struct OfflineNotice: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label("No Internet Connection", systemImage: "wifi.slash").font(.headline).foregroundStyle(.orange)
+            Text("Shepherd reconnects automatically when you're back online.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 2)
     }
 }

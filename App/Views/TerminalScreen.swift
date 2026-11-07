@@ -11,6 +11,8 @@ struct TerminalScreen: View {
     @State private var error: String?
     @State private var takeover = false
     @State private var generation = 0
+    /// For `.pane`: herdr has focused that pane, so the TUI opens on it.
+    @State private var paneFocused = false
 
     private var command: String? {
         guard let p = model.server(serverId) else { return nil }
@@ -18,14 +20,20 @@ struct TerminalScreen: View {
         switch target {
         case .agent(let name):
             return SocketCommand.login("\(herdr) agent attach \(ShellQuote.quote(name))" + (takeover ? " --takeover" : ""))
-        case .session:
+        case .session, .pane:
             return SocketCommand.login(herdr)
         }
     }
 
     var body: some View {
         Group {
-            if let shell = model.shell(for: serverId), let command {
+            if !model.isOnline {
+                ContentUnavailableView {
+                    Label("No Internet Connection", systemImage: "wifi.slash")
+                } description: { Text("Shepherd reconnects automatically when you're back online.") }
+            } else if case .pane = target, !paneFocused {
+                ProgressView().tint(.white)
+            } else if let shell = model.shell(for: serverId), let command {
                 TerminalHost(shell: shell, command: command, onError: { error = $0 })
                     .id(generation)
                     .ignoresSafeArea(.container, edges: .bottom)
@@ -36,8 +44,18 @@ struct TerminalScreen: View {
         }
         .background(Color.black)
         .task(id: model.reconnectToken) {
-            guard let p = model.server(serverId), model.shell(for: serverId)?.isConnected != true else { return }
-            do { _ = try await model.session(for: p); generation += 1 } catch is CancellationError {} catch { self.error = ErrorReport.text(error) }
+            guard let p = model.server(serverId) else { return }
+            do {
+                if model.shell(for: serverId)?.isConnected != true { _ = try await model.session(for: p); generation += 1 }
+                if case .pane(let id) = target, !paneFocused {
+                    try await model.liveSession(for: serverId)?.client.focusPane(id)
+                    paneFocused = true
+                }
+            } catch is CancellationError {
+            } catch {
+                if model.isOnline { self.error = ErrorReport.text(error) }
+                if case .pane = target { paneFocused = true }   // still open herdr, just without the focus
+            }
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
@@ -61,6 +79,8 @@ struct TerminalScreen: View {
         switch target {
         case .agent(let n): "Terminal · \(n)"
         case .session: "herdr"
+        case .pane(let id):
+            model.liveSession(for: serverId)?.snapshot?.chatItems.first { $0.paneId == id }?.title ?? "Terminal"
         }
     }
 }

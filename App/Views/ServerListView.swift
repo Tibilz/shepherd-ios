@@ -34,6 +34,7 @@ struct ServerListView: View {
                     Button("Edit") { editing = server }.tint(.blue)
                 }
             }
+            .onMove { model.moveServers(from: $0, to: $1) }
         }
         .navigationTitle("Server")
         .toolbar {
@@ -42,6 +43,9 @@ struct ServerListView: View {
             }
             ToolbarItem(placement: .topBarLeading) {
                 Button { showSettings = true } label: { Label("Settings", systemImage: "gearshape") }
+            }
+            if model.servers.count > 1 {
+                ToolbarItem(placement: .topBarTrailing) { EditButton() }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { creating = true } label: { Label("Add Server", systemImage: "plus") }

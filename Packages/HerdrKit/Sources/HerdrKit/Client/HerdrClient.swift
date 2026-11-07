@@ -10,6 +10,8 @@ public struct AgentRead: Decodable, Sendable, Equatable {
     public var text: String
     public var truncated: Bool
     public var revision: Int
+    /// "recent_unwrapped" (history) or "visible" (only the screen, while the agent is busy).
+    public var source: String?
 }
 
 /// Typed access to one herdr server over a RemoteShell.
@@ -108,7 +110,7 @@ public actor HerdrClient {
 
     /// Recent output; while an agent is blocked/working herdr can't scroll its alternate-screen
     /// history (`agent_not_idle`), so this falls back to the visible screen — which shows the prompt.
-    public func readAgent(_ target: String, lines: Int = 400) async throws -> AgentRead {
+    public func readAgent(_ target: String, lines: Int = 1000) async throws -> AgentRead {
         do {
             return try await call("agent.read", ["target": .string(target), "source": .string("recent_unwrapped"),
                                                  "lines": .int(lines), "strip_ansi": .bool(true)], as: ReadResult.self).read
@@ -137,6 +139,16 @@ public actor HerdrClient {
     public func renamePane(_ paneId: String, label: String?) async throws {
         let l: JSONValue = label.nonBlank.map(JSONValue.string) ?? .null
         _ = try await call("pane.rename", ["pane_id": .string(paneId), "label": l], as: Ack.self)
+    }
+
+    /// Closes the pane (and ends whatever runs in it). The last pane closes its workspace.
+    public func closePane(_ paneId: String) async throws {
+        _ = try await call("pane.close", ["pane_id": .string(paneId)], as: Ack.self)
+    }
+
+    /// Makes the pane the focused one in herdr (switching workspace and tab), e.g. before attaching the TUI.
+    public func focusPane(_ paneId: String) async throws {
+        _ = try await call("pane.focus", ["pane_id": .string(paneId)], as: Ack.self)
     }
 
     public func focusAgent(_ target: String) async throws {

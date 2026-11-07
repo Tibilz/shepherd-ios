@@ -101,7 +101,7 @@ struct FolderBrowserView: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.borderedProminent)
             }
             .controlSize(.large)
             .lineLimit(1)

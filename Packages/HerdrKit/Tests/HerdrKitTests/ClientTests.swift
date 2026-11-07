@@ -69,7 +69,7 @@ func runningShell() throws -> FakeShell {
         _ = try await client.connect()
         let read = try await client.readAgent("reviewer")
         let p = try #require(shell.params(of: "agent.read"))
-        #expect(p["lines"] as? Int == 400)
+        #expect(p["lines"] as? Int == 1000)
         #expect(p["source"] as? String == "recent_unwrapped")
         #expect(p["target"] as? String == "reviewer")
         #expect(read.text == "hello")
@@ -121,6 +121,25 @@ func runningShell() throws -> FakeShell {
         try await client.renamePane("w1:p1", label: "   ")
         let p = try #require(shell.params(of: "pane.rename"))
         #expect(p.keys.contains("label") && p["label"] is NSNull)
+    }
+
+    @Test func closeAndFocusPane() async throws {
+        let shell = try runningShell()
+        let client = HerdrClient(shell: shell)
+        _ = try await client.connect()
+        try await client.closePane("w1:p2")
+        #expect(shell.params(of: "pane.close")?["pane_id"] as? String == "w1:p2")
+        try await client.focusPane("w1:p3")
+        #expect(shell.params(of: "pane.focus")?["pane_id"] as? String == "w1:p3")
+    }
+
+    @Test func readAgentReportsSourceAndCustomLines() async throws {
+        let shell = try runningShell()
+        let client = HerdrClient(shell: shell)
+        _ = try await client.connect()
+        let read = try await client.readAgent("reviewer", lines: 3000)
+        #expect(shell.params(of: "agent.read")?["lines"] as? Int == 3000)
+        #expect(read.source == "recent_unwrapped")
     }
 
     @Test func serverErrorIsSurfaced() async throws {
