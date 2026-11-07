@@ -1,156 +1,175 @@
-<p align="center"><img src="App/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="120" alt="herdr-App-Icon"></p>
+<p align="center"><img src="App/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="120" alt="herdr app icon"></p>
 
-<h1 align="center">herdr für iPhone</h1>
+<h1 align="center">herdr for iPhone</h1>
 
-<p align="center">Deine <a href="https://herdr.dev">herdr</a>-Agents unterwegs im Blick: per SSH verbinden, Chats lesen, antworten, freigeben – auch per Sprache.</p>
+<p align="center">Keep an eye on your <a href="https://herdr.dev">herdr</a> agents on the go: connect over SSH, read chats, reply, approve – even by voice.</p>
 
-<p align="center"><em>An unofficial iPhone companion for the herdr agent multiplexer: monitor and steer your Claude Code / Codex agents on remote servers over SSH. UI language: German.</em></p>
+<p align="center"><em>An unofficial iPhone companion for the herdr agent multiplexer, for Claude Code and Codex agents running on your own servers.</em></p>
 
 ---
 
-## Was die App kann
+## Features
 
-- **Server-Liste** – mehrere VPS/SSH-Verbindungen, jede mit eigenem Key. Keys liegen nur im Schlüsselbund des iPhones, geschützt mit Face ID.
-- **Workspaces & Agents wie am Desktop** – Live-Status (arbeitet / wartet auf dich / fertig), „Braucht dich“-Bereich oben.
-- **Lesbare Chats** – die Claude-Code-Oberfläche wird zu einem Chat: deine Nachrichten als Blasen, Antworten als Fließtext, Tool-Aufrufe einklappbar, Tabellen seitlich scrollbar. Rohausgabe jederzeit umschaltbar.
-- **Antworten & Freigaben** – Prompts senden, Freigabe-Dialoge mit ↑ ↓ Enter, 1/2/3, y/n, Esc beantworten.
-- **Chats umbenennen** – freier Text, erscheint auch in herdr am Desktop.
-- **Neue Agents starten** – durch die Ordner des Servers navigieren wie in der Dateien-App, dann „Claude Code“ oder „Codex“ tippen.
-- **Echtes Terminal** – volle Terminal-Emulation (SwiftTerm) mit Sondertasten-Leiste.
-- **Sprachsteuerung** – „Gehe zu Agent 2“, „Zeige mir die Ordner“, „Fasse zusammen, was der Agent gemacht hat“. Antwort als Text oder vorgelesen.
-- **Benachrichtigungen** – wenn ein Agent wartet oder fertig ist, global und pro Agent schaltbar, über [ntfy](https://ntfy.sh).
-- **Kein bezahltes Apple-Konto nötig** – Installation mit einer kostenlosen Apple-ID.
+- **Server list:** add several VPS/SSH connections, each with its own key. Keys stay in the iPhone's keychain, protected by Face ID.
+- **Workspaces and agents, like on the desktop:** each agent shows its live status (working, needs you, done). A "Needs You" section at the top collects the ones waiting for you.
+- **Readable chats:** the Claude Code screen turns into a chat.
+  - Your messages appear as bubbles and answers as flowing text.
+  - Tool calls collapse, and wide tables scroll sideways.
+  - You can switch to the raw output at any time.
+- **Reply and approve:** send prompts and answer approval dialogs with ↑ ↓ Enter, 1/2/3, y/n or Esc.
+- **Rename chats:** use any text you like. The name also shows up in herdr on your desktop.
+- **Start new agents:** browse the server's folders like in the Files app, then tap "Claude Code" or "Codex".
+- **Real terminal:** full terminal emulation (SwiftTerm) with a row of special keys.
+- **Voice control:** say things like "go to agent 2", "show me the folders" or "summarize what the agent did". The answer comes as text or is read aloud. Voice works in English and German.
+- **Notifications:** get a push when an agent needs you or is done. You can switch them per agent or globally. They are delivered via [ntfy](https://ntfy.sh).
+- **No paid Apple developer account needed:** install with a free Apple ID.
 
-## Voraussetzungen
+## Requirements
 
 | | |
 |---|---|
 | **Mac** | Xcode 27, `brew install xcodegen` |
-| **iPhone** | iOS 26 oder neuer |
-| **Apple-ID** | eine kostenlose reicht |
-| **Server** | herdr ≥ 0.9.5 (Protokoll 22), `nc` (OpenBSD-netcat, auf Ubuntu Standard), `base64`, `bash` |
-| **SSH-Key** | **Ed25519**, öffentlicher Teil in `~/.ssh/authorized_keys` auf dem Server |
-| optional | `python3` ≥ 3.8 + `curl` für Benachrichtigungen, Claude Code (`claude`) für Sprachdeutung und Zusammenfassungen |
+| **iPhone** | iOS 26 or later |
+| **Apple ID** | a free one is enough |
+| **Server** | herdr ≥ 0.9.5 (protocol 22), `nc` (OpenBSD netcat, default on Ubuntu), `base64`, `bash` |
+| **SSH key** | **Ed25519**, public key in `~/.ssh/authorized_keys` on the server |
+| optional | `python3` ≥ 3.8 and `curl` for notifications; Claude Code (`claude`) for voice interpretation and summaries |
 
-> **RSA-Keys funktionieren nicht:** Die verwendete SSH-Bibliothek signiert RSA nur mit SHA-1 (`ssh-rsa`), was OpenSSH ab 8.8 ablehnt. Einen passenden Key erzeugst du mit
-> `ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_herdr` und hängst `~/.ssh/id_ed25519_herdr.pub` auf dem Server an `~/.ssh/authorized_keys` an.
+> **RSA keys don't work.** The SSH library this app uses signs RSA only with SHA-1 (`ssh-rsa`), and OpenSSH 8.8 and later rejects that. To create a suitable key, run
+> `ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_herdr`
+> and then append `~/.ssh/id_ed25519_herdr.pub` to `~/.ssh/authorized_keys` on the server.
 
 ## Installation
 
 ```sh
 git clone https://github.com/Tibilz/herdr-ios.git
 cd herdr-ios
-./scripts/generate.sh        # erzeugt HerdrApp.xcodeproj
+./scripts/generate.sh        # creates HerdrApp.xcodeproj
 open HerdrApp.xcodeproj
 ```
 
-Beim ersten Öffnen fragt Xcode nach dem Build-Plugin von SwiftTerm → **Trust & Enable**.
+When you open the project for the first time, Xcode asks about SwiftTerm's build plugin. Choose **Trust & Enable**.
 
-### Aufs iPhone (kostenlose Apple-ID)
+### Install on your iPhone (free Apple ID)
 
-1. Xcode → Settings → Accounts → Apple-ID hinzufügen.
-2. Target **HerdrApp** → Signing & Capabilities → Team: *dein Name (Personal Team)*. Die Bundle-ID `de.kozarzewski.herdrapp` auf etwas Eigenes ändern (z. B. `de.deinname.herdrapp`), am besten direkt in `project.yml` und danach `./scripts/generate.sh`.
-3. iPhone per Kabel verbinden, auf dem iPhone **Einstellungen → Datenschutz & Sicherheit → Entwicklermodus** aktivieren.
-4. In Xcode das iPhone als Ziel wählen → **Run** (⌘R).
-5. Beim ersten Start: **Einstellungen → Allgemein → VPN & Geräteverwaltung →** dein Entwicklerprofil → *Vertrauen*.
+1. In Xcode, open Settings → Accounts and add your Apple ID.
+2. Change the bundle ID `de.kozarzewski.herdrapp` to your own, e.g. `com.yourname.herdrapp`. Do this in `project.yml`, then run `./scripts/generate.sh` again.
+3. Select the **HerdrApp** target. Under Signing & Capabilities, set Team to *your name (Personal Team)*.
+4. Connect your iPhone by cable. On the iPhone, turn on **Settings → Privacy & Security → Developer Mode**.
+5. In Xcode, pick your iPhone as the destination and press **Run** (⌘R).
+6. On first launch, go to **Settings → General → VPN & Device Management →** your developer profile → *Trust*.
 
-**Nach 7 Tagen** läuft die Signatur einer kostenlosen Apple-ID ab. Deine Daten bleiben erhalten – einfach erneut aus Xcode starten, oder [SideStore](https://sidestore.io) nutzen, das die Signatur auf dem iPhone selbst erneuert.
+**After 7 days**, the signature from a free Apple ID expires. Your data stays on the phone. To renew, run the app from Xcode again, or use [SideStore](https://sidestore.io), which renews the signature on the iPhone itself.
 
-## Einrichtung
+## Setup
 
-### 1. SSH-Key hinzufügen
+### 1. Add an SSH key
 
-Schlüssel-Symbol → **+**:
+Tap the key icon, then **+**. You can add the key in one of these ways:
 
-- **Aus dem Passwort-Manager:** ins Key-Feld tippen, lange drücken → *Automatisch ausfüllen* → Passwort-Manager wählen → SSH-Key auswählen. Alternativ den privaten Key im Passwort-Manager kopieren und **Aus Zwischenablage einfügen** tippen (danach *Zwischenablage leeren*).
-- **Aus Datei** oder von Hand eintippen.
+- **From a password manager:** tap the key field, long-press, choose *AutoFill*, then your password manager, then your SSH key.
+- **From the clipboard:** copy the private key in your password manager and tap **Paste from Clipboard**. Then tap *Clear Clipboard*.
+- **From a file**, or type it in.
 
-Der Key wird wie ein Passwort verdeckt angezeigt (Auge zum Einblenden). Er bleibt nur auf diesem iPhone (nicht in iCloud). Face ID fragt einmal beim Öffnen der App und erneut nach mehr als 5 Minuten im Hintergrund.
+The key field is masked like a password; tap the eye to show it. The private key never leaves this iPhone and is not synced to iCloud. Face ID asks once when you open the app, and again after the app has been in the background for more than 5 minutes.
 
-### 2. Server anlegen
+### 2. Add a server
 
-Serverliste → **+** → Name, Host, Port, Benutzer, Key. Beim ersten Verbinden zeigt die App den Fingerabdruck des Servers – vergleiche ihn auf dem Server mit
+In the server list, tap **+** and enter name, host, port, user and key.
+
+On the first connection, the app shows the server's fingerprint. Compare it with the output of this command on the server:
 
 ```sh
 ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
 ```
 
-Ändert er sich später, verweigert die App die Verbindung (zurücksetzen in den Server-Einstellungen).
+If the fingerprint changes later, the app refuses to connect. You can reset it in the server settings.
 
-**VPN:** Liegt dein Server hinter WireGuard, Cisco AnyConnect oder OpenVPN (Tunnelblick → auf dem iPhone *OpenVPN Connect*), verbinde zuerst die jeweilige VPN-App; herdr nutzt dann einfach die interne Adresse.
+**VPN:** if your server sits behind WireGuard, Cisco Secure Client or OpenVPN (Tunnelblick users: *OpenVPN Connect* on iOS), connect that VPN app first. Then use the server's internal address in herdr.
 
-### 3. Benachrichtigungen (optional)
+### 3. Notifications (optional)
 
-Push-Nachrichten laufen über [ntfy](https://ntfy.sh), weil eigene Push-Nachrichten ein bezahltes Apple-Konto bräuchten.
+Push notifications go through [ntfy](https://ntfy.sh), because the app's own push notifications would require a paid Apple account.
 
-1. Die kostenlose App **ntfy** auf dem iPhone installieren.
-2. In herdr: Server öffnen → **⋯ → Benachrichtigungen → Einrichten**. Die App zeigt vorher, was auf dem Server passiert.
-3. In ntfy den angezeigten Kanal abonnieren (oder QR-Code scannen) → **Testnachricht senden**.
+1. Install the free **ntfy** app on your iPhone.
+2. In herdr, open a server and tap **⋯ → Notifications → Set Up**. The app shows what it will change on the server before it does anything.
+3. In ntfy, subscribe to the topic shown, or scan the QR code. Then tap **Send Test Notification**.
 
-Ein Tipp auf eine Benachrichtigung öffnet direkt den Agent. Schalter gibt es global, pro Ereignis und pro Agent (Glocke in der Agent-Ansicht).
+Tapping a notification opens that agent directly. There are switches for all notifications, for each event and for each agent; the bell in the agent view toggles that agent.
 
-Auf dem Server entsteht nur `~/.config/herdr-notify/` plus – je nach Server – ein systemd-User-Dienst, zwei crontab-Zeilen oder ein sich selbst überwachender Hintergrundprozess. Kein sudo. **Entfernen** in der App räumt alles wieder ab.
+**What gets installed on the server:**
 
-> **Datenschutz:** ntfy.sh ist öffentlich; der Kanalname ist ein zufälliger geheimer Code. Inhalt: Agent-Name, Server-Name, Status. Ein eigener ntfy-Server lässt sich in `config.json` (`ntfyServer`, `ntfyToken`) eintragen.
+- the folder `~/.config/herdr-notify/`
+- depending on the server, one of:
+  - a systemd user service
+  - two crontab lines
+  - a self-supervising background process
 
-## Sprachsteuerung
+No sudo is needed. **Remove** in the app undoes all of it.
 
-Mikrofon **gedrückt halten und sprechen** (oder kurz tippen zum Starten/Beenden) – unten in der Server-Übersicht und links im Eingabefeld eines Agents.
+> **Privacy:** ntfy.sh is a public service. Your topic name is a random secret code. Notifications contain only the agent name, server name and status. To use your own ntfy server, set `ntfyServer` and `ntfyToken` in `config.json` on the server.
 
-| Du sagst … | Was passiert |
+## Voice control
+
+**Hold the mic button and speak.** You can also tap once to start and tap again to stop. The mic sits at the bottom of the server overview and next to the message field in an agent.
+
+| You say … | What happens |
 |---|---|
-| „Gehe zu Agent 2“, „öffne den Reviewer“, „zurück“, „Terminal“ | sofort, ohne Netz |
-| „Ja“, „freigeben“, „nein“, „Option 2“ (wenn der Agent wartet) | die passende Taste wird gesendet |
-| im Agent: „Schreib noch Tests für den Login“ | geht als Nachricht an den Agent – 3 s sichtbar, abbrechbar |
-| „Zeige mir die Ordner“, „Befehl: wie viel Platz ist frei“ | Claude schlägt einen Befehl vor, ausgeführt erst nach Tippen; gefährliche Befehle brauchen ein zweites Bestätigen |
-| „Fasse zusammen, was der Agent gemacht hat“, „fasse die README zusammen“ | Antwort als Text oder vorgelesen |
+| "go to agent 2", "open the reviewer", "back", "terminal" | happens instantly, works offline |
+| "yes", "approve", "no", "option 2" (while the agent waits) | the matching key is sent |
+| inside an agent: "also write tests for the login" | sent to the agent as a message after 3 seconds; you can cancel before that |
+| "show me the folders", "command: how much disk space is free" | Claude proposes a command, which only runs after you tap. Dangerous commands need a second confirmation. |
+| "summarize what the agent did", "summarize the README" | the answer is shown as text or read aloud |
 
-Die Spracherkennung läuft auf dem iPhone (Apple SpeechAnalyzer). Deutung und Zusammenfassungen übernimmt **Claude Code auf deinem Server** über dein eigenes Claude-Abo (`claude -p`) – die App braucht keinen API-Key.
+Speech recognition runs on the iPhone (Apple SpeechAnalyzer). **Claude Code on your server** interprets the commands and writes the summaries, using your own Claude subscription (`claude -p`). The app needs no API key. You choose the language (English or German), how answers are delivered and the voice under ⚙︎ in the server list.
 
-## Wie es funktioniert
+## How it works
 
 ```
-iPhone ──SSH──▶ Server ──Unix-Socket──▶ herdr
-                    └── claude -p (Sprache, Zusammenfassungen)
-                    └── herdr-notify ──▶ ntfy.sh ──▶ ntfy-App
+iPhone ──SSH──▶ server ──unix socket──▶ herdr
+                   ├── claude -p (voice, summaries)
+                   └── herdr-notify ──▶ ntfy.sh ──▶ ntfy app
 ```
 
-Die App spricht das JSON-Socket-API von herdr direkt über SSH an (`nc -U`), abonniert Live-Ereignisse für den Status und liest die Agent-Ausgabe mit `agent.read`. Es wird nichts dauerhaft auf dem Server installiert, außer du richtest Benachrichtigungen ein.
+The app talks to herdr's JSON socket API directly over SSH (`nc -U`). It subscribes to live events for status changes and reads agent output with `agent.read`. Nothing is installed on the server permanently unless you set up notifications.
 
-| Ordner | Inhalt |
+| Folder | Contents |
 |---|---|
-| `App/` | SwiftUI-App (iOS 26) |
-| `Packages/HerdrKit` | Protokoll, Client, Live-Session, Chat-Parser, Sprachlogik, Notify-Installer – ohne Abhängigkeiten |
-| `Packages/HerdrSSH` | SSH-Transport (Citadel), Key-Import, Integrationstests |
-| `docs/superpowers/` | Design und Umsetzungspläne |
+| `App/` | SwiftUI app (iOS 26) |
+| `Packages/HerdrKit` | protocol, client, live session, chat parser, voice logic, notify installer (no dependencies) |
+| `Packages/HerdrSSH` | SSH transport (Citadel), key import, integration tests |
+| `docs/superpowers/` | design and implementation plans (German) |
 
-## Entwicklung
+## Development
 
 ```sh
-cd Packages/HerdrKit && swift test                                   # Kernlogik
-cd Packages/HerdrSSH && swift test                                   # Key-Import
+cd Packages/HerdrKit && swift test                                   # core logic
+cd Packages/HerdrSSH && swift test                                   # key import
 python3 -m unittest discover -s Packages/HerdrKit/Tests/notify       # herdr-notify
 xcodebuild -scheme HerdrApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -skipPackagePluginValidation build
 ```
 
-Integrationstests gegen einen echten Server nutzen nur eine eigene herdr-Session `herdrapp-test`:
+Integration tests against a real server only use a separate herdr session named `herdrapp-test`:
 
 ```sh
-# auf dem Server
+# on the server
 nohup herdr --session herdrapp-test server >/dev/null 2>&1 &
 herdr --session herdrapp-test workspace create --label apptest
-# lokal
+# locally
 cd Packages/HerdrSSH
 HERDR_IT_HOST=<ip> HERDR_IT_USER=<user> HERDR_IT_KEY=~/.ssh/id_ed25519 swift test --filter IntegrationTests
 ```
 
-Falls Xcode große Abhängigkeiten (`swift-nio`, `swift-crypto`, …) wegen einer langsamen Verbindung nicht laden kann, lassen sich lokale Mirrors hinterlegen (`swift package config set-mirror …` in `Packages/HerdrSSH`); `scripts/generate.sh` übernimmt sie ins Xcode-Projekt.
+If a slow connection keeps Xcode from fetching the large dependencies (`swift-nio`, `swift-crypto`, …), you can configure local mirrors:
 
-## Hinweise
+1. In `Packages/HerdrSSH`, run `swift package config set-mirror …`.
+2. Run `scripts/generate.sh`, which copies the mirrors into the Xcode project.
 
-- Inoffizielles Projekt, nicht mit herdr verbunden. Das App-Icon basiert auf dem herdr-Logo (Apache-2.0, siehe [NOTICE](NOTICE)).
-- Getestet mit herdr 0.9.5 und Claude Code 2.1 auf Ubuntu.
+## Notes
 
-## Lizenz
+- This is an unofficial project and not affiliated with herdr. The app icon is based on the herdr logo (Apache-2.0, see [NOTICE](NOTICE)).
+- Tested with herdr 0.9.5 and Claude Code 2.1 on Ubuntu.
+
+## License
 
 [MIT](LICENSE)
