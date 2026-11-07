@@ -1,0 +1,10 @@
+*.xcodeproj
+.build/
+DerivedData/
+.swiftpm/
+.superpowers/
+xcuserdata/
+Packages/*/Package.resolved
+__pycache__/
+.DS_Store
+herdr-notify.pid

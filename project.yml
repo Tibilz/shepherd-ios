@@ -1,0 +1,49 @@
+name: HerdrApp
+options:
+  bundleIdPrefix: de.kozarzewski
+  deploymentTarget:
+    iOS: "26.0"
+packages:
+  HerdrKit:
+    path: Packages/HerdrKit
+  HerdrSSH:
+    path: Packages/HerdrSSH
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    exactVersion: 1.99.2
+targets:
+  HerdrApp:
+    type: application
+    platform: iOS
+    sources: [App]
+    dependencies:
+      - package: HerdrKit
+      - package: HerdrSSH
+      - package: SwiftTerm
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.kozarzewski.herdrapp
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_NSFaceIDUsageDescription: "Entsperrt deine SSH-Keys."
+        INFOPLIST_KEY_CFBundleDisplayName: herdr
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Für Sprachbefehle an deine Agents."
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Wandelt deine Sprachbefehle auf dem iPhone in Text um."
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleURLTypes:
+          - CFBundleURLName: de.kozarzewski.herdrapp
+            CFBundleURLSchemes: [herdrapp]
+        UILaunchScreen: {}
+        NSFaceIDUsageDescription: "Entsperrt deine SSH-Keys."
+        NSMicrophoneUsageDescription: "Für Sprachbefehle an deine Agents."
+        NSSpeechRecognitionUsageDescription: "Wandelt deine Sprachbefehle auf dem iPhone in Text um."
+        CFBundleDisplayName: herdr

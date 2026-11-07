@@ -1,0 +1,1 @@
+{"agents": [{"agent": "claude", "agent_status": "working", "cwd": "/home/ubuntu", "focused": true, "foreground_cwd": "/home/ubuntu", "pane_id": "w1:p1", "revision": 1, "state_change_seq": 19, "tab_id": "w1:t1", "terminal_id": "term_65f86e93ef9ef1", "terminal_title": "ubuntu@myhost: ~", "terminal_title_stripped": "ubuntu@myhost: ~", "workspace_id": "w1"}], "type": "agent_list"}
