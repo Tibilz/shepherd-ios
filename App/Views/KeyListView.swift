@@ -23,31 +23,31 @@ struct KeyListView: View {
                     for i in idx {
                         let key = model.keys[i]
                         if model.servers.contains(where: { $0.keyId == key.id }) {
-                            deleteError = "„\(key.label)“ wird noch von einem Server genutzt."
+                            deleteError = "“\(key.label)” is still used by a server."
                         } else {
                             try? model.deleteKey(key.id)
                         }
                     }
                 }
             } footer: {
-                Text("Private Keys liegen nur auf diesem iPhone im Schlüsselbund, geschützt mit Face ID. Sie werden nicht mit iCloud synchronisiert.")
+                Text("Private keys stay in this iPhone's keychain, protected by Face ID. They are not synced to iCloud.")
             }
         }
-        .navigationTitle("SSH-Keys")
+        .navigationTitle("SSH Keys")
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) { Button("Fertig") { dismiss() } }
+            ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
             ToolbarItem(placement: .primaryAction) {
-                Button { importing = true } label: { Label("Importieren", systemImage: "plus") }
+                Button { importing = true } label: { Label("Import", systemImage: "plus") }
             }
         }
         .sheet(isPresented: $importing) { KeyImportView() }
-        .alert("Nicht möglich", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+        .alert("Not possible", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
             Button("OK") {}
         } message: { Text(deleteError ?? "") }
         .overlay {
             if model.keys.isEmpty {
-                ContentUnavailableView("Keine Keys", systemImage: "key",
-                                       description: Text("Kopiere deinen privaten Key aus deinem Passwort-Manager und füge ihn hier ein."))
+                ContentUnavailableView("No Keys", systemImage: "key",
+                                       description: Text("Copy your private key from your password manager and paste it here."))
             }
         }
     }
@@ -59,17 +59,17 @@ struct KeyDetailView: View {
 
     var body: some View {
         Form {
-            Section("Fingerabdruck") {
+            Section("Fingerprint") {
                 Text(key.fingerprintSHA256).font(.footnote.monospaced()).textSelection(.enabled)
             }
             Section {
                 Text(key.publicKeyOpenSSH).font(.caption2.monospaced()).textSelection(.enabled)
-                Button(copied ? "Kopiert" : "Öffentlichen Key kopieren") {
+                Button(copied ? "Copied" : "Copy Public Key") {
                     UIPasteboard.general.string = key.publicKeyOpenSSH
                     copied = true
                 }
-            } header: { Text("Öffentlicher Key") } footer: {
-                Text("Diese Zeile gehört auf dem Server in ~/.ssh/authorized_keys.")
+            } header: { Text("Public Key") } footer: {
+                Text("Add this line to ~/.ssh/authorized_keys on the server.")
             }
         }
         .navigationTitle(key.label)

@@ -28,71 +28,71 @@ struct ServerEditView: View {
             Form {
                 Section("Server") {
                     TextField("Name", text: $name)
-                    TextField("Host oder IP", text: $host)
+                    TextField("Host or IP", text: $host)
                         .textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
                     TextField("Port", text: $port).keyboardType(.numberPad)
-                    TextField("Benutzer", text: $user)
+                    TextField("User", text: $user)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
                 }
-                Section("SSH-Key") {
+                Section("SSH Key") {
                     Picker("Key", selection: $keyId) {
-                        Text("Bitte wählen").tag(UUID?.none)
+                        Text("Choose").tag(UUID?.none)
                         ForEach(model.keys) { Text($0.label).tag(UUID?.some($0.id)) }
                     }
                 }
                 Section {
-                    TextField("herdr-Pfad", text: $herdrPath)
+                    TextField("herdr path", text: $herdrPath)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    TextField("herdr-Session (leer = Standard)", text: $session)
+                    TextField("herdr session (empty = default)", text: $session)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
                 } header: { Text("herdr") } footer: {
-                    Text("Der Pfad wird in einer Login-Shell ausgeführt. Normalerweise reicht „herdr“.")
+                    Text("Runs in a login shell. Usually “herdr” is enough.")
                 }
                 Section {
-                    Toggle("Braucht VPN", isOn: $requiresVPN)
+                    Toggle("Requires VPN", isOn: $requiresVPN)
                     if requiresVPN {
-                        Picker("VPN-App", selection: $vpnApp) {
-                            Text("Keine Angabe").tag("")
+                        Picker("VPN app", selection: $vpnApp) {
+                            Text("Not specified").tag("")
                             Text("WireGuard").tag("WireGuard")
                             Text("Cisco Secure Client").tag("Cisco Secure Client")
                             Text("OpenVPN Connect").tag("OpenVPN Connect")
                         }
                     }
-                } header: { Text("Netzwerk") }
+                } header: { Text("Network") }
                 if let error { Section { CopyableError(text: error) } }
                 if let o = original, model.hasTrustedHostKey(host: o.host, port: o.port) {
                     Section {
-                        Button("Host-Key zurücksetzen", role: .destructive) { confirmResetHostKey = true }
+                        Button("Reset Host Key", role: .destructive) { confirmResetHostKey = true }
                     } footer: {
-                        Text("Nur nötig, wenn der Server neu installiert wurde. Beim nächsten Verbinden musst du den neuen Fingerabdruck prüfen.")
+                        Text("Only needed if the server was reinstalled. You will verify the new fingerprint on the next connection.")
                     }
                 }
                 if original != nil {
                     Section {
-                        Button("Server entfernen", role: .destructive) { confirmDelete = true }
+                        Button("Remove Server", role: .destructive) { confirmDelete = true }
                     } footer: {
-                        Text("Entfernt nur das Profil in der App. Auf dem Server wird nichts verändert.")
+                        Text("Removes the profile from the app only. Nothing on the server is changed.")
                     }
                 }
             }
-            .navigationTitle(original == nil ? "Neuer Server" : "Server bearbeiten")
+            .navigationTitle(original == nil ? "New Server" : "Edit Server")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Sichern") { save() }.disabled(!valid) }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button("Save") { save() }.disabled(!valid) }
             }
-            .confirmationDialog("Server entfernen?", isPresented: $confirmDelete) {
-                Button("Entfernen", role: .destructive) {
+            .confirmationDialog("Remove server?", isPresented: $confirmDelete) {
+                Button("Remove", role: .destructive) {
                     if let original { try? model.deleteServer(original.id) }
                     dismiss()
                 }
             }
-            .confirmationDialog("Host-Key wirklich zurücksetzen?", isPresented: $confirmResetHostKey, titleVisibility: .visible) {
-                Button("Zurücksetzen", role: .destructive) {
+            .confirmationDialog("Really reset the host key?", isPresented: $confirmResetHostKey, titleVisibility: .visible) {
+                Button("Reset", role: .destructive) {
                     if let o = original { model.forgetHostKey(host: o.host, port: o.port); model.disconnect(o.id) }
                 }
             } message: {
-                Text("Ein geänderter Host-Key kann auch ein Angriff sein. Setze ihn nur zurück, wenn du weißt, warum er sich geändert hat.")
+                Text("A changed host key can also mean an attack. Only reset it if you know why it changed.")
             }
             .onAppear(perform: load)
         }

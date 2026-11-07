@@ -131,7 +131,7 @@ let sampleConfig = NotifyConfig(ntfyTopic: "herdr-abcdefghijklmnopqrstuvwx", soc
 
     @Test func plannedActionsDescribeBackgroundMode() {
         let a = NotifyInstaller(shell: FakeShell()).plannedActions(linger: false, cron: false)
-        #expect(a.contains { $0.contains("Hintergrund") })
+        #expect(a.contains { $0.contains("background process") })
         #expect(!a.contains { $0.contains("crontab") })
     }
 

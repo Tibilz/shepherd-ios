@@ -8,7 +8,7 @@ struct StatusBanner: View {
 
     private var text: String {
         let n = item.transition.name
-        return item.transition.to == .blocked ? "„\(n)“ wartet auf Freigabe" : "„\(n)“ ist fertig"
+        return item.transition.to == .blocked ? "“\(n)” is waiting for approval" : "“\(n)” is done"
     }
 
     var body: some View {
@@ -30,6 +30,6 @@ struct StatusBanner: View {
         .buttonStyle(.plain)
         .padding(.horizontal, 12)
         .gesture(DragGesture(minimumDistance: 10).onEnded { if $0.translation.height < 0 { dismiss() } })
-        .accessibilityHint("Öffnet den Agent")
+        .accessibilityHint("Opens the agent")
     }
 }

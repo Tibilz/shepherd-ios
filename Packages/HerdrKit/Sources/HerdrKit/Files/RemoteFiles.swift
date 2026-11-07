@@ -23,9 +23,9 @@ public enum RemoteFilesError: Error, LocalizedError, Equatable {
     case unreadable(String), invalidName, createFailed(String)
     public var errorDescription: String? {
         switch self {
-        case .unreadable(let m): "Ordner nicht lesbar: \(m)"
-        case .invalidName: "Ungültiger Ordnername. Er darf nicht leer sein und kein „/“ enthalten."
-        case .createFailed(let m): "Ordner konnte nicht angelegt werden: \(m)"
+        case .unreadable(let m): "Folder not readable: \(m)"
+        case .invalidName: "Invalid folder name. It must not be empty or contain “/”."
+        case .createFailed(let m): "Could not create folder: \(m)"
         }
     }
 }

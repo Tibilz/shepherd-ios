@@ -15,9 +15,9 @@ final class AppLock {
 
     func unlock() async {
         let ctx = LAContext()
-        ctx.localizedCancelTitle = "Abbrechen"
+        ctx.localizedCancelTitle = "Cancel"
         do {
-            let ok = try await ctx.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Entsperrt deine SSH-Keys.")
+            let ok = try await ctx.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Unlocks your SSH keys.")
             guard ok else { return }
             keyStore.use(context: ctx)
             isLocked = false

@@ -76,13 +76,13 @@ final class VoiceCoordinator {
         guard phase == .listening else { return }          // second release / double tap: ignore
         interaction += 1
         let token = interaction
-        phase = .thinking("Verarbeite …")
+        phase = .thinking("Processing …")
         Task {
             let heard = await speech.stop()
             guard token == interaction else { return }       // dismissed meanwhile
             if case .failed(let m) = speech.state { phase = .error(m); return }
             transcript = heard
-            guard !heard.isEmpty else { phase = .unknown("Ich habe nichts gehört. Du kannst auch tippen."); return }
+            guard !heard.isEmpty else { phase = .unknown("I didn't hear anything. You can also type."); return }
             await handle(heard, token: token)
         }
     }
@@ -118,10 +118,10 @@ final class VoiceCoordinator {
     }
 
     private func interpretWithClaude(_ text: String, _ ctx: VoiceContext, forceShell: Bool, token: Int) async {
-        guard let shell = model?.shell(for: serverId) else { phase = .error("Nicht verbunden."); return }
-        phase = .thinking("Claude überlegt …")
+        guard let shell = model?.shell(for: serverId) else { phase = .error("Not connected."); return }
+        phase = .thinking("Claude is thinking …")
         do {
-            let intent = try await ClaudeAssistant(shell: shell).interpret(text, context: ctx, forceShell: forceShell)
+            let intent = try await ClaudeAssistant(shell: shell, language: SpeechInput.languageName).interpret(text, context: ctx, forceShell: forceShell)
             guard token == interaction else { return }
             await execute(intent, ctx, token: token)
         } catch {
@@ -145,14 +145,14 @@ final class VoiceCoordinator {
                 + [.terminal(server: serverId, target: t)]
             phase = .idle
         case .approve(let keys):
-            guard let target = ctx.currentAgent?.target, let client = session?.client else { phase = .error("Nicht verbunden."); return }
+            guard let target = ctx.currentAgent?.target, let client = session?.client else { phase = .error("Not connected."); return }
             do {
                 try await client.sendKeys(target, keys: keys)
-                phase = .done("Gesendet: \(keys.joined(separator: " "))")
+                phase = .done("Sent: \(keys.joined(separator: " "))")
                 await session?.refresh()
             } catch { phase = .error(ErrorReport.text(error)) }
         case .prompt(let text):
-            guard let a = ctx.currentAgent else { phase = .unknown("An welchen Agent soll die Nachricht gehen?"); return }
+            guard let a = ctx.currentAgent else { phase = .unknown("Which agent should get the message?"); return }
             startCountdown(target: a.target, name: a.displayName, text: text)
         case .promptAgent(let target, let text):
             let name = ctx.agents.first { $0.target == target }?.displayName ?? target
@@ -161,7 +161,7 @@ final class VoiceCoordinator {
             phase = .confirmShell(command: command, explanation: explanation, cwd: cwd,
                                   dangerous: CommandSafety.isDangerous(command), secondStep: false)
         case .summarizeAgent(let target):
-            guard let t = target ?? ctx.currentAgent?.target else { phase = .unknown("Welchen Agent soll ich zusammenfassen?"); return }
+            guard let t = target ?? ctx.currentAgent?.target else { phase = .unknown("Which agent should I summarize?"); return }
             startSummary(.agent(target: t))
         case .summarizeFile(let path):
             startSummary(.file(path: path))
@@ -201,7 +201,7 @@ final class VoiceCoordinator {
             transcript = tx
             phase = .promptPaused(target: t, name: n)
         case .thinking:
-            phase = .unknown("Bearbeite den Text und tippe „Erneut deuten“.")
+            phase = .unknown("Edit the text and tap “Interpret Again”.")
         default: break
         }
     }
@@ -216,13 +216,13 @@ final class VoiceCoordinator {
     }
 
     private func sendPrompt(target: String, text: String) async {
-        guard let client = session?.client else { phase = .error("Nicht verbunden."); return }
+        guard let client = session?.client else { phase = .error("Not connected."); return }
         do {
             try await client.prompt(target, text: text)   // never retried automatically
-            phase = .done("An \(target) gesendet.")
+            phase = .done("Sent to \(target).")
             await session?.refresh()
         } catch {
-            phase = .error("Senden fehlgeschlagen: \(ErrorReport.text(error))\nPrüfe den Agent, bevor du es erneut versuchst.")
+            phase = .error("Sending failed: \(ErrorReport.text(error))\nCheck the agent before you try again.")
         }
     }
 
@@ -234,7 +234,7 @@ final class VoiceCoordinator {
             phase = .confirmShell(command: cmd, explanation: expl, cwd: cwd, dangerous: true, secondStep: true)
             return
         }
-        guard let shell = model?.shell(for: serverId) else { phase = .error("Nicht verbunden."); return }
+        guard let shell = model?.shell(for: serverId) else { phase = .error("Not connected."); return }
         phase = .running(command: cmd)
         interaction += 1
         let token = interaction
@@ -243,9 +243,9 @@ final class VoiceCoordinator {
                 let res = try await shell.exec(SocketCommand.login(ShellRun.script(command: cmd, cwd: cwd)))
                 guard let self, token == self.interaction else { return }
                 var text = String(decoding: res.stdout.prefix(200_000), as: UTF8.self)
-                if res.stdout.count > 200_000 { text += "\n… (gekürzt)" }
-                if res.exitCode == 124 { text += "\n… (nach 2 Minuten abgebrochen)" }
-                self.phase = .output(command: cmd, text: text.isEmpty ? "(keine Ausgabe)" : text, exitCode: res.exitCode)
+                if res.stdout.count > 200_000 { text += "\n… (truncated)" }
+                if res.exitCode == 124 { text += "\n… (stopped after 2 minutes)" }
+                self.phase = .output(command: cmd, text: text.isEmpty ? "(no output)" : text, exitCode: res.exitCode)
             } catch is CancellationError {
             } catch {
                 self?.phase = .error(ErrorReport.text(error))
@@ -270,12 +270,12 @@ final class VoiceCoordinator {
     }
 
     private func runSummary(_ job: Job, speak: Bool) {
-        guard let shell = model?.shell(for: serverId), let client = session?.client else { phase = .error("Nicht verbunden."); return }
-        phase = .thinking("Fasse zusammen …")
+        guard let shell = model?.shell(for: serverId), let client = session?.client else { phase = .error("Not connected."); return }
+        phase = .thinking("Summarizing …")
         let token = interaction
         workTask = Task { [weak self] in
             do {
-                let assistant = ClaudeAssistant(shell: shell)
+                let assistant = ClaudeAssistant(shell: shell, language: SpeechInput.languageName)
                 let text: String
                 switch job {
                 case .agent(let target):

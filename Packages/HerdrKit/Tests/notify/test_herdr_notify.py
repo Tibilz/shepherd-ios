@@ -165,14 +165,14 @@ class MessageTests(unittest.TestCase):
         title = m["headers"]["Title"]
         self.assertTrue(title.startswith("=?UTF-8?B?"))
         decoded = base64.b64decode(title[len("=?UTF-8?B?"):-2]).decode()
-        self.assertEqual(decoded, "„Prüfer“ ist fertig")
+        self.assertEqual(decoded, "“Prüfer” is done")
         title.encode("ascii")
 
     def test_asciiTitlePlain(self):
         n = hn.Notice(key="rev", name="rev", kind="idle", title=None, pane_id="w1:p1")
         # Typographic quotes make it non-ASCII, so it is always encoded; check decoded text.
         t = hn.build_message(cfg(), n)["headers"]["Title"]
-        self.assertEqual(base64.b64decode(t[10:-2]).decode(), "„rev“ ist bereit")
+        self.assertEqual(base64.b64decode(t[10:-2]).decode(), "“rev” is ready")
 
     def test_clickUrlEncodesTarget(self):
         n = hn.Notice(key="w1:p2", name="Codex", kind="blocked", title=None, pane_id="w1:p2")

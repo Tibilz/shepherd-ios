@@ -25,7 +25,7 @@ struct AgentDetailView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 8) {
                         if read?.truncated == true {
-                            Text("Ältere Ausgabe gekürzt").font(.caption2).foregroundStyle(.tertiary)
+                            Text("Older output trimmed").font(.caption2).foregroundStyle(.tertiary)
                         }
                         if let blocks, !rawOutput {
                             TranscriptView(blocks: blocks)
@@ -46,14 +46,14 @@ struct AgentDetailView: View {
                     if read == nil {
                         if let connectError {
                             ContentUnavailableView {
-                                Label("Nicht verbunden", systemImage: "bolt.horizontal.circle")
+                                Label("Not connected", systemImage: "bolt.horizontal.circle")
                             } description: { Text(connectError).textSelection(.enabled) } actions: {
-                                Button("Erneut versuchen") { Task { await connect() } }.buttonStyle(.bordered)
-                                Button("Fehler kopieren") { ErrorReport.copy(connectError) }
+                                Button("Try Again") { Task { await connect() } }.buttonStyle(.bordered)
+                                Button("Copy error") { ErrorReport.copy(connectError) }
                             }
                         } else if agent == nil && session?.snapshot != nil {
-                            ContentUnavailableView("Agent nicht gefunden", systemImage: "questionmark.circle",
-                                                   description: Text("„\(target)“ läuft auf diesem Server gerade nicht."))
+                            ContentUnavailableView("Agent not found", systemImage: "questionmark.circle",
+                                                   description: Text("“\(target)” is not running on this server right now."))
                         } else {
                             ProgressView()
                         }
@@ -75,11 +75,11 @@ struct AgentDetailView: View {
                 }
             }
             ToolbarItem(placement: .secondaryAction) {
-                Button { renaming = agent } label: { Label("Umbenennen", systemImage: "pencil") }
+                Button { renaming = agent } label: { Label("Rename", systemImage: "pencil") }
                     .disabled(agent == nil)
             }
             ToolbarItem(placement: .secondaryAction) {
-                Toggle(isOn: $rawOutput) { Label("Rohausgabe", systemImage: "text.alignleft") }
+                Toggle(isOn: $rawOutput) { Label("Raw output", systemImage: "text.alignleft") }
             }
             if let cfg = model.notifyConfigs[serverId] {
                 ToolbarItem(placement: .secondaryAction) {
@@ -90,7 +90,7 @@ struct AgentDetailView: View {
                             catch { self.error = ErrorReport.text(error) }
                         }
                     } label: {
-                        Label(on ? "Benachrichtigungen aus" : "Benachrichtigungen an", systemImage: on ? "bell.fill" : "bell.slash")
+                        Label(on ? "Notifications off" : "Notifications on", systemImage: on ? "bell.fill" : "bell.slash")
                     }
                     .disabled(!cfg.enabled)
                 }
@@ -113,8 +113,8 @@ struct AgentDetailView: View {
         }
         .onDisappear { if model.visibleAgent?.server == serverId && model.visibleAgent?.target == target { model.visibleAgent = nil } }
         .task(id: agent?.revision) { await load() }
-        .alert("Fehler", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-            Button("Kopieren") { if let error { ErrorReport.copy(error) } }
+        .alert("Error", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+            Button("Copy") { if let error { ErrorReport.copy(error) } }
             Button("OK", role: .cancel) {}
         } message: { Text(error ?? "") }
     }
@@ -122,7 +122,7 @@ struct AgentDetailView: View {
     private var inputBar: some View {
         HStack(alignment: .bottom, spacing: 8) {
             if let voice { MicButton(voice: voice).scaleEffect(0.85) }
-            TextField("Nachricht an \(agent?.displayName ?? target)", text: $input, axis: .vertical)
+            TextField("Message \(agent?.displayName ?? target)", text: $input, axis: .vertical)
                 .lineLimit(1...5)
                 .textFieldStyle(.roundedBorder)
                 .focused($inputFocused)
@@ -132,7 +132,7 @@ struct AgentDetailView: View {
                 if sending { ProgressView() } else { Image(systemName: "arrow.up.circle.fill").font(.title2) }
             }
             .disabled(input.trimmed.isEmpty || sending || agent == nil)
-            .accessibilityLabel("Senden")
+            .accessibilityLabel("Send")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -175,7 +175,7 @@ struct AgentDetailView: View {
             inputFocused = false
         } catch {
             // Never resent automatically: the prompt may have arrived. The text stays in the field.
-            self.error = "Senden fehlgeschlagen: \(ErrorReport.text(error))\nPrüfe die Ausgabe, bevor du es erneut versuchst."
+            self.error = "Sending failed: \(ErrorReport.text(error))\nCheck the output before you try again."
         }
     }
 
@@ -195,7 +195,7 @@ struct ApprovalBar: View {
     let send: ([String]) -> Void
 
     private let nav: [(label: String, symbol: String?, keys: [String])] = [
-        ("Hoch", "arrow.up", ["up"]), ("Runter", "arrow.down", ["down"]), ("Tab", "arrow.right.to.line", ["tab"]),
+        ("Up", "arrow.up", ["up"]), ("Down", "arrow.down", ["down"]), ("Tab", "arrow.right.to.line", ["tab"]),
     ]
     private let choices: [(String, [String])] = [
         ("1", ["1"]), ("2", ["2"]), ("3", ["3"]), ("y", ["y"]), ("n", ["n"]),
@@ -203,7 +203,7 @@ struct ApprovalBar: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("Der Agent wartet auf deine Antwort", systemImage: "exclamationmark.circle.fill")
+            Label("The agent is waiting for you", systemImage: "exclamationmark.circle.fill")
                 .font(.caption.weight(.semibold)).foregroundStyle(.red)
             HStack(spacing: 8) {
                 ForEach(nav, id: \.label) { k in

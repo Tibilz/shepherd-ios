@@ -56,7 +56,7 @@ class LogThrottle:
             self._state[key] = [now, 0]
             self.sink(msg)
         elif now - st[0] >= self.interval:
-            self.sink("%s (%d× seit der letzten Meldung)" % (msg, st[1] + 1))
+            self.sink("%s (%d× since the last report)" % (msg, st[1] + 1))
             st[0], st[1] = now, 0
         else:
             st[1] += 1
@@ -102,7 +102,7 @@ class ConfigWatcher:
                 self._config = merge_config(raw)
                 self._mtime = mtime
             except (OSError, ValueError) as e:
-                log("config ungültig, behalte vorherige: %s" % type(e).__name__)
+                log("invalid config, keeping previous: %s" % type(e).__name__)
                 self._mtime = mtime
         return self._config
 
@@ -187,7 +187,7 @@ def allowed(cfg: dict, n: Notice) -> bool:
 # ---------------------------------------------------------------------------
 # Messages
 
-TITLES = {"blocked": "„%s“ wartet auf Freigabe", "done": "„%s“ ist fertig", "idle": "„%s“ ist bereit"}
+TITLES = {"blocked": "“%s” is waiting for approval", "done": "“%s” is done", "idle": "“%s” is ready"}
 TAGS = {"blocked": "warning", "done": "white_check_mark", "idle": "zzz"}
 
 
@@ -246,7 +246,7 @@ class HerdrSocket:
             f = s.makefile("rb")
             line = f.readline()
         if not line:
-            raise ConnectionError("leere Antwort")
+            raise ConnectionError("empty response")
         msg = json.loads(line)
         if "error" in msg:
             raise RuntimeError("herdr: %s" % msg["error"].get("code"))
@@ -267,7 +267,7 @@ class HerdrSocket:
                 except socket.timeout:
                     continue
                 if not chunk:
-                    raise ConnectionError("Abo beendet")
+                    raise ConnectionError("subscription ended")
                 buf += chunk
                 while b"\n" in buf:
                     line, buf = buf.split(b"\n", 1)
@@ -276,7 +276,7 @@ class HerdrSocket:
                     msg = json.loads(line)
                     if not started:
                         if (msg.get("result") or {}).get("type") != "subscription_started":
-                            raise RuntimeError("Abo nicht gestartet")
+                            raise RuntimeError("subscription not started")
                         started = True
                         continue
                     yield msg
@@ -296,10 +296,10 @@ def post_ntfy(msg: dict, timeout: float = 10.0, throttle: Optional[LogThrottle] 
         with urllib.request.urlopen(req, timeout=timeout) as r:
             ok = 200 <= r.status < 300
     except Exception as e:  # network errors, HTTP errors, timeouts: drop and keep running
-        (throttle.error if throttle else (lambda k, m: log(m)))("ntfy", "ntfy-Zustellung fehlgeschlagen: %s" % type(e).__name__)
+        (throttle.error if throttle else (lambda k, m: log(m)))("ntfy", "ntfy delivery failed: %s" % type(e).__name__)
         return False
     if throttle:
-        throttle.ok("ntfy", "ntfy-Zustellung wieder in Ordnung")
+        throttle.ok("ntfy", "ntfy delivery is working again")
     return ok
 
 
@@ -335,13 +335,13 @@ def run(config_path: str, poll_interval: float = 15.0, reconnect_delay: float = 
                 panes = watched["panes"]
             try:
                 for _ in HerdrSocket(path).subscribe(subscriptions_for(panes), stop, restart):
-                    throttle.ok("events", "Event-Abo wieder verbunden")
+                    throttle.ok("events", "event subscription reconnected")
                     dirty.set()
                 if restart.is_set():
                     continue  # agent panes changed: resubscribe right away
             except Exception as e:
                 if not stop.is_set():
-                    throttle.error("events", "Event-Abo unterbrochen (%s), neue Versuche alle %gs" % (type(e).__name__, reconnect_delay))
+                    throttle.error("events", "event subscription interrupted (%s), retrying every %gs" % (type(e).__name__, reconnect_delay))
             dirty.set()  # resync once reconnected
             stop.wait(reconnect_delay)
 
@@ -359,10 +359,10 @@ def run(config_path: str, poll_interval: float = 15.0, reconnect_delay: float = 
         try:
             agents = HerdrSocket(cfg.get("socket") or "").request("agent.list").get("agents") or []
         except Exception as e:
-            throttle.error("list", "agent.list fehlgeschlagen: %s (läuft herdr?)" % type(e).__name__)
+            throttle.error("list", "agent.list failed: %s (is herdr running?)" % type(e).__name__)
             stop.wait(reconnect_delay)
             continue
-        throttle.ok("list", "herdr wieder erreichbar")
+        throttle.ok("list", "herdr reachable again")
         last_poll = time.monotonic()
         panes = frozenset(a["pane_id"] for a in agents if a.get("pane_id"))
         with watched_lock:
@@ -371,7 +371,7 @@ def run(config_path: str, poll_interval: float = 15.0, reconnect_delay: float = 
                 restart.set()
         if not ready:
             ready = True
-            log("bereit: beobachte %d Agent(s)" % len(agents))
+            log("ready: watching %d agent(s)" % len(agents))
         for n in tracker.update(agents, time.monotonic()):
             cfg = watcher.current()
             if allowed(cfg, n):
@@ -379,13 +379,13 @@ def run(config_path: str, poll_interval: float = 15.0, reconnect_delay: float = 
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    ap = argparse.ArgumentParser(description="herdr → ntfy Benachrichtigungen")
+    ap = argparse.ArgumentParser(description="herdr → ntfy notifications")
     ap.add_argument("--config", required=True)
     args = ap.parse_args(argv)
     pid_path = os.path.join(os.path.dirname(os.path.abspath(args.config)), "herdr-notify.pid")
     with open(pid_path, "w") as f:
         f.write(str(os.getpid()))
-    log("herdr-notify gestartet (pid %d)" % os.getpid())
+    log("herdr-notify started (pid %d)" % os.getpid())
     try:
         run(args.config)
     except KeyboardInterrupt:

@@ -47,36 +47,36 @@ struct KeyImportView: View {
                                     .accessibilityHidden(true)
                             }
                         }
-                        Toggle(isOn: $showKey) { Label("Key anzeigen", systemImage: showKey ? "eye" : "eye.slash") }
+                        Toggle(isOn: $showKey) { Label("Show key", systemImage: showKey ? "eye" : "eye.slash") }
                         .onChange(of: pem) { _, _ in validate() }
                         Button {
                             pem = UIPasteboard.general.string ?? ""
                             fromClipboard = true
-                        } label: { Label("Aus Zwischenablage einfügen", systemImage: "doc.on.clipboard") }
-                        Button { pickingFile = true } label: { Label("Aus Datei wählen", systemImage: "folder") }
-                    } header: { Text("Privater Key") } footer: {
-                        Text("Eintippen oder ins Feld tippen und lange drücken → „Automatisch ausfüllen“ → dein Passwort-Manager → deinen SSH-Key wählen. Unterstützt werden OpenSSH-Keys (Ed25519 empfohlen).")
+                        } label: { Label("Paste from Clipboard", systemImage: "doc.on.clipboard") }
+                        Button { pickingFile = true } label: { Label("Choose File", systemImage: "folder") }
+                    } header: { Text("Private Key") } footer: {
+                        Text("Type it, or tap the field, long-press → AutoFill → your password manager → pick your SSH key. OpenSSH keys are supported (Ed25519 recommended).")
                     }
                     if needsPassphrase {
                         Section("Passphrase") {
                             SecureField("Passphrase", text: $passphrase)
                                 .textContentType(.password)
                                 .onSubmit(validate)
-                            Toggle("Passphrase merken", isOn: $remember)
+                            Toggle("Remember passphrase", isOn: $remember)
                         }
                     }
                     if let error { Section { CopyableError(text: error) } }
                 }
             }
-            .navigationTitle("SSH-Key importieren")
+            .navigationTitle("Import SSH Key")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(result == nil ? "Abbrechen" : "Fertig") { dismiss() }
+                    Button(result == nil ? "Cancel" : "Done") { dismiss() }
                 }
                 if result == nil {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Importieren", action: save).disabled(pem.isEmpty || (needsPassphrase && passphrase.isEmpty))
+                        Button("Import", action: save).disabled(pem.isEmpty || (needsPassphrase && passphrase.isEmpty))
                     }
                 }
             }
@@ -94,21 +94,21 @@ struct KeyImportView: View {
     @ViewBuilder
     private func importedSection(_ ref: StoredKeyRef, _ parsed: ParsedKey) -> some View {
         Section {
-            Label("„\(ref.label)“ importiert", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+            Label("“\(ref.label)” imported", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
             if let w = parsed.warning { Label(w, systemImage: "exclamationmark.triangle").foregroundStyle(.orange) }
         }
-        Section("Fingerabdruck") { Text(ref.fingerprintSHA256).font(.footnote.monospaced()).textSelection(.enabled) }
-        Section("Öffentlicher Key") {
+        Section("Fingerprint") { Text(ref.fingerprintSHA256).font(.footnote.monospaced()).textSelection(.enabled) }
+        Section("Public Key") {
             Text(ref.publicKeyOpenSSH).font(.caption2.monospaced()).textSelection(.enabled)
-            Button("Kopieren") { UIPasteboard.general.string = ref.publicKeyOpenSSH }
+            Button("Copy") { UIPasteboard.general.string = ref.publicKeyOpenSSH }
         }
         if fromClipboard {
             Section {
-                Button("Zwischenablage leeren") {
+                Button("Clear Clipboard") {
                     UIPasteboard.general.string = ""
                     fromClipboard = false
                 }
-            } footer: { Text("Dein privater Key liegt noch in der Zwischenablage.") }
+            } footer: { Text("Your private key is still on the clipboard.") }
         }
     }
 

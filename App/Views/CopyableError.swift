@@ -9,7 +9,7 @@ enum ErrorReport {
         return msg.contains(detail) ? msg : "\(msg)\n\nTechnisch: \(detail)"
     }
 
-    /// What "Kopieren" puts on the clipboard: message + app/iOS version + time, for sending to support.
+    /// What "Copy" puts on the clipboard: message + app/iOS version + time, for sending to support.
     static func clipboard(_ text: String) -> String {
         let info = Bundle.main.infoDictionary
         let version = "\(info?["CFBundleShortVersionString"] as? String ?? "?") (\(info?["CFBundleVersion"] as? String ?? "?"))"
@@ -32,7 +32,7 @@ struct CopyableError: View {
                 ErrorReport.copy(text)
                 copied = true
             } label: {
-                Label(copied ? "Kopiert" : "Fehler kopieren", systemImage: copied ? "checkmark" : "doc.on.doc")
+                Label(copied ? "Copied" : "Copy error", systemImage: copied ? "checkmark" : "doc.on.doc")
                     .font(.footnote)
             }
             .buttonStyle(.borderless)

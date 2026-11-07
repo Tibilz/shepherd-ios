@@ -31,11 +31,11 @@ targets:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_NSFaceIDUsageDescription: "Entsperrt deine SSH-Keys."
+        INFOPLIST_KEY_NSFaceIDUsageDescription: "Unlocks your SSH keys."
         INFOPLIST_KEY_CFBundleDisplayName: herdr
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Für Sprachbefehle an deine Agents."
-        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Wandelt deine Sprachbefehle auf dem iPhone in Text um."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "For voice commands to your agents."
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Turns your voice commands into text on your iPhone."
     info:
       path: App/Info.plist
       properties:
@@ -43,7 +43,7 @@ targets:
           - CFBundleURLName: de.kozarzewski.herdrapp
             CFBundleURLSchemes: [herdrapp]
         UILaunchScreen: {}
-        NSFaceIDUsageDescription: "Entsperrt deine SSH-Keys."
-        NSMicrophoneUsageDescription: "Für Sprachbefehle an deine Agents."
-        NSSpeechRecognitionUsageDescription: "Wandelt deine Sprachbefehle auf dem iPhone in Text um."
+        NSFaceIDUsageDescription: "Unlocks your SSH keys."
+        NSMicrophoneUsageDescription: "For voice commands to your agents."
+        NSSpeechRecognitionUsageDescription: "Turns your voice commands into text on your iPhone."
         CFBundleDisplayName: herdr

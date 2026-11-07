@@ -8,10 +8,10 @@ public enum KeyImportError: Error, Equatable, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .needsPassphrase: "Dieser Key ist mit einer Passphrase geschützt. Bitte gib sie ein."
-        case .wrongPassphrase: "Die Passphrase ist falsch."
-        case .unsupported(let t): "Dieser Key-Typ (\(t)) wird nicht unterstützt. Bitte nutze einen Ed25519- oder RSA-Key."
-        case .invalid: "Das ist kein gültiger privater OpenSSH-Key (er beginnt mit „-----BEGIN OPENSSH PRIVATE KEY-----“)."
+        case .needsPassphrase: "This key is protected by a passphrase. Please enter it."
+        case .wrongPassphrase: "The passphrase is wrong."
+        case .unsupported(let t): "This key type (\(t)) is not supported. Please use an Ed25519 or RSA key."
+        case .invalid: "This is not a valid private OpenSSH key (it starts with “-----BEGIN OPENSSH PRIVATE KEY-----”)."
         }
     }
 }
@@ -24,7 +24,7 @@ public struct ParsedKey: Sendable, Equatable {
 
     /// Shown at import. Citadel signs RSA with SHA-1 (`ssh-rsa`), which OpenSSH ≥ 8.8 rejects by default.
     public var warning: String? {
-        kind == .rsa ? "RSA-Keys werden von aktuellen SSH-Servern meist abgelehnt (SHA-1-Signatur). Empfohlen: ein Ed25519-Key." : nil
+        kind == .rsa ? "Current SSH servers usually reject RSA keys from this app (SHA-1 signature). Recommended: an Ed25519 key." : nil
     }
 }
 

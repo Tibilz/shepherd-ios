@@ -16,10 +16,10 @@ struct VoiceSheet: View {
                 }
                 .padding()
             }
-            .navigationTitle("Sprachbefehl")
+            .navigationTitle("Voice Command")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Schließen") { voice.dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Close") { voice.dismiss() } }
             }
         }
         .presentationDetents([.medium, .large])
@@ -30,25 +30,25 @@ struct VoiceSheet: View {
         if voice.phase == .listening {
             HStack(spacing: 10) {
                 Image(systemName: "waveform").symbolEffect(.variableColor.iterative).foregroundStyle(.red)
-                Text(voice.speech.transcript.isEmpty ? "Ich höre zu …" : voice.speech.transcript)
+                Text(voice.speech.transcript.isEmpty ? "Listening …" : voice.speech.transcript)
                     .foregroundStyle(voice.speech.transcript.isEmpty ? .secondary : .primary)
             }
             if case .preparing(let m) = voice.speech.state { Label(m, systemImage: "arrow.down.circle").font(.footnote) }
-            if voice.speech.state == .starting { Text("Starte Mikrofon …").font(.footnote).foregroundStyle(.secondary) }
-            Button { voice.stopListening() } label: { Label("Fertig", systemImage: "stop.circle.fill").frame(maxWidth: .infinity) }
+            if voice.speech.state == .starting { Text("Starting microphone …").font(.footnote).foregroundStyle(.secondary) }
+            Button { voice.stopListening() } label: { Label("Done", systemImage: "stop.circle.fill").frame(maxWidth: .infinity) }
                 .buttonStyle(.borderedProminent).tint(.red)
         } else {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Verstanden").font(.caption).foregroundStyle(.secondary)
-                TextField("Was soll passieren?", text: $voice.transcript, axis: .vertical)
+                Text("Heard").font(.caption).foregroundStyle(.secondary)
+                TextField("What should happen?", text: $voice.transcript, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
                     .focused($editing)
                     .onChange(of: editing) { _, on in if on { voice.pauseCountdown() } }
                 HStack {
-                    Button("Erneut deuten") { editing = false; voice.reinterpret() }
+                    Button("Interpret Again") { editing = false; voice.reinterpret() }
                         .disabled(voice.transcript.trimmingCharacters(in: .whitespaces).isEmpty)
                     Spacer()
-                    Button { voice.startListening() } label: { Label("Neu sprechen", systemImage: "mic") }
+                    Button { voice.startListening() } label: { Label("Speak Again", systemImage: "mic") }
                 }
                 .font(.footnote)
                 .buttonStyle(.borderless)
@@ -71,15 +71,15 @@ struct VoiceSheet: View {
                     .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
                 if let cwd { Text("in \(cwd)").font(.caption.monospaced()).foregroundStyle(.secondary) }
                 if dangerous {
-                    Label(second ? "Wirklich ausführen? Das kann Daten verändern oder löschen."
-                                 : "Dieser Befehl verändert oder löscht etwas.",
+                    Label(second ? "Really run it? This can change or delete data."
+                                 : "This command changes or deletes something.",
                           systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(.red).font(.footnote.weight(.semibold))
                 }
                 HStack {
-                    Button("Abbrechen", role: .cancel) { voice.dismiss() }.buttonStyle(.bordered)
+                    Button("Cancel", role: .cancel) { voice.dismiss() }.buttonStyle(.bordered)
                     Spacer()
-                    Button(dangerous ? (second ? "Ja, wirklich ausführen" : "Ausführen …") : "Ausführen") { voice.confirmShell() }
+                    Button(dangerous ? (second ? "Yes, Run It" : "Run …") : "Run") { voice.confirmShell() }
                         .buttonStyle(.borderedProminent).tint(dangerous ? .red : .accentColor)
                 }
             }
@@ -94,50 +94,50 @@ struct VoiceSheet: View {
                 }
                 Text(text).font(.system(.footnote, design: .monospaced)).textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Button { UIPasteboard.general.string = text } label: { Label("Ausgabe kopieren", systemImage: "doc.on.doc") }
+                Button { UIPasteboard.general.string = text } label: { Label("Copy Output", systemImage: "doc.on.doc") }
                     .font(.footnote).buttonStyle(.borderless)
             }
         case .promptCountdown(_, let name, let text, let remaining):
             VStack(alignment: .leading, spacing: 10) {
-                Text("Nachricht an \(name)").font(.caption).foregroundStyle(.secondary)
+                Text("Message to \(name)").font(.caption).foregroundStyle(.secondary)
                 Text(text).padding(10).frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
                 ProgressView(value: Double(3 - remaining), total: 3)
                 HStack {
-                    Button("Abbrechen", role: .cancel) { voice.dismiss() }.buttonStyle(.bordered)
+                    Button("Cancel", role: .cancel) { voice.dismiss() }.buttonStyle(.bordered)
                     Spacer()
-                    Button("Jetzt senden (\(remaining))") { voice.sendPromptNow() }.buttonStyle(.borderedProminent)
+                    Button("Send Now (\(remaining))") { voice.sendPromptNow() }.buttonStyle(.borderedProminent)
                 }
             }
         case .promptPaused(_, let name):
             VStack(alignment: .leading, spacing: 10) {
-                Label("Angehalten – bearbeite den Text oben", systemImage: "pause.circle").font(.footnote).foregroundStyle(.secondary)
+                Label("Paused – edit the text above", systemImage: "pause.circle").font(.footnote).foregroundStyle(.secondary)
                 HStack {
-                    Button("Abbrechen", role: .cancel) { voice.dismiss() }.buttonStyle(.bordered)
+                    Button("Cancel", role: .cancel) { voice.dismiss() }.buttonStyle(.bordered)
                     Spacer()
-                    Button("An \(name) senden") { editing = false; voice.sendEdited() }
+                    Button("Send to \(name)") { editing = false; voice.sendEdited() }
                         .buttonStyle(.borderedProminent)
                         .disabled(voice.transcript.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
         case .askAnswerMode:
             VStack(alignment: .leading, spacing: 10) {
-                Text("Wie möchtest du die Zusammenfassung?").font(.subheadline)
+                Text("How do you want the summary?").font(.subheadline)
                 HStack {
-                    Button { voice.chooseAnswerMode(.text, remember: rememberMode) } label: { Label("Als Text", systemImage: "text.alignleft").frame(maxWidth: .infinity) }
-                    Button { voice.chooseAnswerMode(.audio, remember: rememberMode) } label: { Label("Vorlesen", systemImage: "speaker.wave.2").frame(maxWidth: .infinity) }
+                    Button { voice.chooseAnswerMode(.text, remember: rememberMode) } label: { Label("As text", systemImage: "text.alignleft").frame(maxWidth: .infinity) }
+                    Button { voice.chooseAnswerMode(.audio, remember: rememberMode) } label: { Label("Read aloud", systemImage: "speaker.wave.2").frame(maxWidth: .infinity) }
                 }
                 .buttonStyle(.borderedProminent)
-                Toggle("Nicht mehr fragen", isOn: $rememberMode).font(.footnote)
+                Toggle("Don't ask again", isOn: $rememberMode).font(.footnote)
             }
         case .answer(let text):
             VStack(alignment: .leading, spacing: 10) {
                 Text(text).textSelection(.enabled)
                 HStack {
-                    Button { Speaker.shared.say(text) } label: { Label("Vorlesen", systemImage: "speaker.wave.2") }
-                    Button { Speaker.shared.stop() } label: { Label("Stopp", systemImage: "stop.fill") }
+                    Button { Speaker.shared.say(text) } label: { Label("Read aloud", systemImage: "speaker.wave.2") }
+                    Button { Speaker.shared.stop() } label: { Label("Stop", systemImage: "stop.fill") }
                     Spacer()
-                    Button { UIPasteboard.general.string = text } label: { Label("Kopieren", systemImage: "doc.on.doc") }
+                    Button { UIPasteboard.general.string = text } label: { Label("Copy", systemImage: "doc.on.doc") }
                 }
                 .font(.footnote).buttonStyle(.borderless)
             }
@@ -177,7 +177,7 @@ struct MicButton: View {
                         if let t = pressedAt, Date().timeIntervalSince(t) > 0.4, voice.phase == .listening { voice.stopListening() }
                     }
             )
-            .accessibilityLabel(listening ? "Aufnahme beenden" : "Sprachbefehl")
+            .accessibilityLabel(listening ? "Stop recording" : "Voice Command")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { if voice.phase == .listening { voice.stopListening() } else { voice.startListening() } }
     }

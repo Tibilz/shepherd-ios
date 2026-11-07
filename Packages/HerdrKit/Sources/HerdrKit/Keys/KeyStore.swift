@@ -25,9 +25,9 @@ public enum KeyStoreError: Error, Equatable, LocalizedError {
     case notFound, locked, os(Int32)
     public var errorDescription: String? {
         switch self {
-        case .notFound: "Der SSH-Key wurde im Schlüsselbund nicht gefunden."
-        case .locked: "Die App ist gesperrt. Bitte mit Face ID entsperren."
-        case .os(let s): "Schlüsselbund-Fehler (\(s))."
+        case .notFound: "The SSH key was not found in the keychain."
+        case .locked: "The app is locked. Please unlock it with Face ID."
+        case .os(let s): "Keychain error (\(s))."
         }
     }
 }

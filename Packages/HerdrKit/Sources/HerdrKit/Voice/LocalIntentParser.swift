@@ -46,7 +46,7 @@ public enum LocalIntentParser {
     public static func parse(_ transcript: String, context: VoiceContext) -> VoiceIntent? {
         let text = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
         let w = words(text)
-        guard !w.isEmpty else { return .unknown(question: "Ich habe nichts verstanden.") }
+        guard !w.isEmpty else { return .unknown(question: "I didn't catch that.") }
         if shellRequest(text) != nil { return nil }
 
         // Back / terminal
@@ -88,7 +88,7 @@ public enum LocalIntentParser {
         if let current = context.currentAgent {
             // A prompt to a waiting agent ends with Enter and could answer its dialog: ask instead of guessing.
             if current.agentStatus == .blocked {
-                return .unknown(question: "Der Agent wartet auf eine Antwort. Sag „Ja“, „Nein“ oder „Option 2“ – oder antworte über die Tasten.")
+                return .unknown(question: "The agent is waiting for an answer. Say “yes”, “no” or “option 2” – or use the buttons.")
             }
             return .prompt(text: text)
         }

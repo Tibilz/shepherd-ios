@@ -19,41 +19,41 @@ struct NotificationsView: View {
     var body: some View {
         Form {
             if loading {
-                HStack { ProgressView(); Text("Prüfe den Server …").foregroundStyle(.secondary) }
+                HStack { ProgressView(); Text("Checking the server …").foregroundStyle(.secondary) }
             } else if let status, status.installed, let config {
                 statusSection(status)
                 subscribeSection(config)
                 switchesSection(config)
                 agentsSection(config)
                 Section {
-                    Button("Benachrichtigungen entfernen", role: .destructive) { confirmRemove = true }
+                    Button("Remove Notifications", role: .destructive) { confirmRemove = true }
                 } footer: {
-                    Text("Entfernt den Dienst und seine Dateien vom Server. Deine übrigen Einstellungen bleiben unberührt.")
+                    Text("Removes the service and its files from the server. Your other settings stay untouched.")
                 }
             } else if let status, status.installed {
                 Section {
-                    Label("Der Dienst ist installiert, aber seine Konfiguration ist nicht lesbar.", systemImage: "exclamationmark.triangle")
+                    Label("The service is installed, but its configuration can't be read.", systemImage: "exclamationmark.triangle")
                         .foregroundStyle(.orange)
-                    Button("Benachrichtigungen entfernen", role: .destructive) { confirmRemove = true }
+                    Button("Remove Notifications", role: .destructive) { confirmRemove = true }
                 } footer: {
-                    Text("Danach kannst du sie neu einrichten. Dabei entsteht ein neuer Kanal, den du in ntfy neu abonnieren musst.")
+                    Text("You can set them up again afterwards. That creates a new topic you need to subscribe to in ntfy.")
                 }
             } else {
                 setupSection(status)
             }
             if let error { Section { CopyableError(text: error) } }
         }
-        .navigationTitle("Benachrichtigungen")
+        .navigationTitle("Notifications")
         .disabled(busy)
         .overlay { if busy { ProgressView().controlSize(.large) } }
         .task { await reload() }
         .refreshable { await reload() }
-        .alert("Hinweis", isPresented: Binding(get: { info != nil }, set: { if !$0 { info = nil } })) {
+        .alert("Note", isPresented: Binding(get: { info != nil }, set: { if !$0 { info = nil } })) {
             Button("OK") {}
         } message: { Text(info ?? "") }
         .sheet(isPresented: $confirmInstall) { installSheet }
-        .confirmationDialog("Benachrichtigungen entfernen?", isPresented: $confirmRemove, titleVisibility: .visible) {
-            Button("Entfernen", role: .destructive) { run { try await model.uninstallNotify(serverId) } }
+        .confirmationDialog("Remove notifications?", isPresented: $confirmRemove, titleVisibility: .visible) {
+            Button("Remove", role: .destructive) { run { try await model.uninstallNotify(serverId) } }
         }
     }
 
@@ -62,14 +62,14 @@ struct NotificationsView: View {
     @ViewBuilder
     private func setupSection(_ status: NotifyStatus?) -> some View {
         Section {
-            Label("Push-Nachrichten, wenn ein Agent auf dich wartet oder fertig ist", systemImage: "bell.badge")
-            Text("Dafür läuft ein kleiner Dienst auf dem Server, der die Nachrichten über ntfy schickt. Auf dem iPhone brauchst du die kostenlose App „ntfy“.")
+            Label("Push notifications when an agent needs you or is done", systemImage: "bell.badge")
+            Text("A small service on the server sends them via ntfy. On your iPhone you need the free “ntfy” app.")
                 .font(.footnote).foregroundStyle(.secondary)
             if status?.python == false {
                 Label(NotifyError.pythonMissing.localizedDescription, systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
             }
-            Button("Einrichten …") { confirmInstall = true }
+            Button("Set Up …") { confirmInstall = true }
                 .disabled(status?.python == false)
         }
     }
@@ -77,27 +77,27 @@ struct NotificationsView: View {
     private var installSheet: some View {
         NavigationStack {
             List {
-                Section("Das passiert auf \(profile?.name ?? "dem Server")") {
+                Section("What happens on \(profile?.name ?? "the server")") {
                     ForEach(NotifyInstaller(shell: NoShell()).plannedActions(linger: status?.linger ?? false, cron: status?.cron ?? false), id: \.self) {
                         Label($0, systemImage: "checkmark.circle")
                     }
                 }
                 Section {
-                    Text("Nachrichten laufen über den öffentlichen Dienst ntfy.sh. Wer den Namen deines Kanals (ein zufälliger, geheimer Code) kennt, kann sie mitlesen. Inhalt: nur Agent-Name, Server-Name und Status.")
+                    Text("Messages go through the public ntfy.sh service. Anyone who knows your topic name (a random, secret code) can read them. Content: agent name, server name and status only.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle("Einrichten")
+            .navigationTitle("Set Up")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { confirmInstall = false } }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { confirmInstall = false } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Einrichten") {
+                    Button("Set Up") {
                         confirmInstall = false
                         run {
                             let mode = try await model.installNotify(serverId)
                             if mode == .background {
-                                info = "Läuft. Nach einem Neustart des Servers startet die App den Dienst beim nächsten Verbinden wieder."
+                                info = "Running. After a server reboot, the app restarts the service the next time it connects."
                             }
                         }
                     }
@@ -110,17 +110,17 @@ struct NotificationsView: View {
     private func statusSection(_ s: NotifyStatus) -> some View {
         Section {
             HStack {
-                Label(s.running ? "Läuft" : "Gestoppt", systemImage: s.running ? "checkmark.circle.fill" : "pause.circle.fill")
+                Label(s.running ? "Running" : "Stopped", systemImage: s.running ? "checkmark.circle.fill" : "pause.circle.fill")
                     .foregroundStyle(s.running ? .green : .orange)
                 Spacer()
                 Text(modeLabel(s.mode)).font(.caption).foregroundStyle(.secondary)
             }
-            Button("Testnachricht senden") {
-                run { try await model.sendTestNotification(serverId); info = "Testnachricht verschickt. Sie sollte gleich auf deinem iPhone erscheinen." }
+            Button("Send Test Notification") {
+                run { try await model.sendTestNotification(serverId); info = "Test notification sent. It should appear on your iPhone shortly." }
             }
         } footer: {
             if s.mode == .background || s.mode == .cron, !s.linger, let user = profile?.user {
-                Text("Optional für automatischen Start nach einem Server-Neustart: einmal auf dem Server `sudo loginctl enable-linger \(user)` ausführen, danach hier entfernen und neu einrichten.")
+                Text("Optional, to start automatically after a server reboot: run `sudo loginctl enable-linger \(user)` once on the server, then remove and set up again here.")
             }
         }
     }
@@ -131,31 +131,31 @@ struct NotificationsView: View {
             HStack(alignment: .top, spacing: 16) {
                 if let qr = qrCode(c.subscribeURL.absoluteString) {
                     Image(uiImage: qr).interpolation(.none).resizable().frame(width: 120, height: 120)
-                        .accessibilityLabel("QR-Code zum Abonnieren")
+                        .accessibilityLabel("QR code to subscribe")
                 }
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("1. App „ntfy“ installieren").font(.footnote)
-                    Text("2. In ntfy auf + tippen, Kanal einfügen").font(.footnote)
-                    Text("3. Testnachricht senden").font(.footnote)
+                    Text("1. Install the “ntfy” app").font(.footnote)
+                    Text("2. In ntfy tap +, paste the topic").font(.footnote)
+                    Text("3. Send a test notification").font(.footnote)
                 }
             }
             Text(c.ntfyTopic).font(.footnote.monospaced()).textSelection(.enabled)
-            Button("Kanal kopieren") { UIPasteboard.general.string = c.ntfyTopic }
-            Link("ntfy im App Store", destination: URL(string: "https://apps.apple.com/app/ntfy/id1625396347")!)
-        } header: { Text("Auf dem iPhone abonnieren") } footer: {
-            Text("Server in ntfy: \(c.ntfyServer). Halte den Kanalnamen geheim.")
+            Button("Copy Topic") { UIPasteboard.general.string = c.ntfyTopic }
+            Link("ntfy on the App Store", destination: URL(string: "https://apps.apple.com/app/ntfy/id1625396347")!)
+        } header: { Text("Subscribe on iPhone") } footer: {
+            Text("Server in ntfy: \(c.ntfyServer). Keep the topic name secret.")
         }
     }
 
     @ViewBuilder
     private func switchesSection(_ c: NotifyConfig) -> some View {
-        Section("Benachrichtigen, wenn …") {
-            Toggle("Benachrichtigungen aktiv", isOn: binding(c.enabled) { $0.enabled = $1 })
-            Toggle("ein Agent auf Freigabe wartet", isOn: binding(c.events.blocked) { $0.events.blocked = $1 })
+        Section("Notify me when …") {
+            Toggle("Notifications enabled", isOn: binding(c.enabled) { $0.enabled = $1 })
+            Toggle("an agent waits for approval", isOn: binding(c.events.blocked) { $0.events.blocked = $1 })
                 .disabled(!c.enabled)
-            Toggle("ein Agent fertig ist", isOn: binding(c.events.done) { $0.events.done = $1 })
+            Toggle("an agent is done", isOn: binding(c.events.done) { $0.events.done = $1 })
                 .disabled(!c.enabled)
-            Toggle("ein Agent wieder bereit ist", isOn: binding(c.events.idle) { $0.events.idle = $1 })
+            Toggle("an agent is ready again", isOn: binding(c.events.idle) { $0.events.idle = $1 })
                 .disabled(!c.enabled)
         }
     }
@@ -166,7 +166,7 @@ struct NotificationsView: View {
         let liveKeys = live.map(\.target)
         let extra = c.agents.keys.filter { !liveKeys.contains($0) }.sorted()
         Section {
-            Toggle("Neue Agents standardmäßig", isOn: binding(c.defaultAgentEnabled) { $0.defaultAgentEnabled = $1 })
+            Toggle("New agents by default", isOn: binding(c.defaultAgentEnabled) { $0.defaultAgentEnabled = $1 })
             ForEach(live) { a in
                 Toggle(a.displayName, isOn: binding(c.isEnabled(agent: a.target)) { $0.agents[a.target] = $1 })
             }
@@ -174,8 +174,8 @@ struct NotificationsView: View {
                 Toggle(key, isOn: binding(c.isEnabled(agent: key)) { $0.agents[key] = $1 })
                     .foregroundStyle(.secondary)
             }
-        } header: { Text("Pro Agent") } footer: {
-            Text("Grau: Agents, die gerade nicht laufen.")
+        } header: { Text("Per Agent") } footer: {
+            Text("Gray: agents that are not running right now.")
         }
         .disabled(!c.enabled)
     }
@@ -211,7 +211,7 @@ struct NotificationsView: View {
         switch m {
         case .systemd: "systemd"
         case .cron: "cron"
-        case .background: "Hintergrund"
+        case .background: "Background"
         case .none: "—"
         }
     }

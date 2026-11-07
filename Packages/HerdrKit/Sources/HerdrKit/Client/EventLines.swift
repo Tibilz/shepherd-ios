@@ -48,7 +48,7 @@ public struct HerdrEvent: Sendable, Equatable {
         do { l = try HerdrJSON.decoder.decode(Line.self, from: line) }
         catch { throw HerdrError.decoding(String(describing: error)) }
         if let e = l.error { throw HerdrError.server(code: e.code, message: e.message) }
-        guard let type = l.event ?? l.result?.type else { throw HerdrError.decoding("Event ohne Typ") }
+        guard let type = l.event ?? l.result?.type else { throw HerdrError.decoding("event without type") }
         let p = l.data ?? l.result
         return HerdrEvent(
             type: type,
@@ -72,7 +72,7 @@ extension HerdrClient {
     /// subscribed per pane — pass the agent panes in `statusPanes`.
     public func eventStream(types: [String] = HerdrClient.defaultEventTypes,
                             statusPanes: [String] = []) throws -> AsyncThrowingStream<HerdrEvent, Error> {
-        guard let socket = status?.socket else { throw HerdrError.transport("Nicht verbunden") }
+        guard let socket = status?.socket else { throw HerdrError.transport("Not connected") }
         let subs = JSONValue.array(types.map { .object(["type": .string($0)]) }
             + statusPanes.sorted().map { .object(["type": .string("pane.agent_status_changed"), "pane_id": .string($0)]) })
         let req = HerdrRequest(id: "app-events", method: "events.subscribe", params: ["subscriptions": subs])

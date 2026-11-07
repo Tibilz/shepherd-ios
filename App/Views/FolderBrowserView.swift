@@ -38,7 +38,7 @@ struct FolderBrowserView: View {
                 }
             } footer: {
                 if let l = listing, shown.isEmpty {
-                    Text(l.entries.isEmpty ? "Dieser Ordner ist leer." : "Nur versteckte Einträge.")
+                    Text(l.entries.isEmpty ? "This folder is empty." : "Only hidden items.")
                 }
             }
         }
@@ -48,7 +48,7 @@ struct FolderBrowserView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { newFolderName = ""; askNewFolder = true } label: {
-                    Label("Neuer Ordner", systemImage: "folder.badge.plus")
+                    Label("New Folder", systemImage: "folder.badge.plus")
                 }
                 .disabled(listing == nil)
             }
@@ -58,11 +58,11 @@ struct FolderBrowserView: View {
                         ForEach(HerdrClient.agentKinds.filter { $0.kind != "claude" && $0.kind != "codex" }, id: \.kind) { k in
                             Button(k.label) { launch(kind: k.kind) }
                         }
-                    } label: { Label("Anderen Agent hier starten", systemImage: "sparkles.rectangle.stack") }
-                    Toggle("Versteckte Ordner zeigen", isOn: $showHidden)
+                    } label: { Label("Start Another Agent Here", systemImage: "sparkles.rectangle.stack") }
+                    Toggle("Show Hidden Folders", isOn: $showHidden)
                     if let p = listing?.path, let parent = RemoteFiles.parent(of: p) {
                         NavigationLink(value: Route.folder(server: serverId, path: parent)) {
-                            Label("Übergeordneter Ordner", systemImage: "arrow.up.doc")
+                            Label("Parent Folder", systemImage: "arrow.up.doc")
                         }
                     }
                     NavigationLink(value: Route.folder(server: serverId, path: nil)) { Label("Home", systemImage: "house") }
@@ -70,12 +70,12 @@ struct FolderBrowserView: View {
             }
         }
         .safeAreaInset(edge: .bottom) { launchBar }
-        .alert("Neuer Ordner", isPresented: $askNewFolder) {
+        .alert("New Folder", isPresented: $askNewFolder) {
             TextField("Name", text: $newFolderName)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            Button("Anlegen") { createFolder() }
-            Button("Abbrechen", role: .cancel) {}
+            Button("Create") { createFolder() }
+            Button("Cancel", role: .cancel) {}
         } message: {
             Text("in \(listing?.path ?? "")")
         }
@@ -106,11 +106,11 @@ struct FolderBrowserView: View {
             .controlSize(.large)
             .lineLimit(1)
             Button { launch(kind: nil) } label: {
-                Label("Nur Terminal", systemImage: "apple.terminal").frame(maxWidth: .infinity)
+                Label("Terminal Only", systemImage: "apple.terminal").frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
             if let launching, launching != "claude", launching != "codex" {
-                HStack { ProgressView(); Text("Starte …").font(.footnote).foregroundStyle(.secondary) }
+                HStack { ProgressView(); Text("Starting …").font(.footnote).foregroundStyle(.secondary) }
             }
         }
         .padding(.horizontal, 16)

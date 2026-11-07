@@ -11,6 +11,7 @@ struct ServerOverviewView: View {
     @State private var connecting = false
     @State private var voice: VoiceCoordinator?
     @State private var renaming: Agent?
+    @AppStorage("voiceHintSeen") private var voiceHintSeen = false
 
     private var profile: ServerProfile? { model.server(serverId) }
 
@@ -19,10 +20,10 @@ struct ServerOverviewView: View {
             ConnectionBanner(state: session?.state, error: error, profile: profile, retry: { Task { await connect() } })
             if let snap = session?.snapshot {
                 if !snap.needsAttention.isEmpty {
-                    Section("Braucht dich") {
+                    Section("Needs You") {
                         ForEach(snap.needsAttention) { agent in
                             NavigationLink(value: Route.agent(server: serverId, target: agent.target)) { AgentRow(agent: agent) }
-                                .contextMenu { Button { renaming = agent } label: { Label("Umbenennen", systemImage: "pencil") } }
+                                .contextMenu { Button { renaming = agent } label: { Label("Rename", systemImage: "pencil") } }
                         }
                     }
                 }
@@ -35,7 +36,7 @@ struct ServerOverviewView: View {
                             ForEach(snap.panes(in: tab)) { pane in
                                 if let agent = snap.agent(onPane: pane.paneId) {
                                     NavigationLink(value: Route.agent(server: serverId, target: agent.target)) { AgentRow(agent: agent) }
-                                .contextMenu { Button { renaming = agent } label: { Label("Umbenennen", systemImage: "pencil") } }
+                                .contextMenu { Button { renaming = agent } label: { Label("Rename", systemImage: "pencil") } }
                                 } else {
                                     PaneRow(pane: pane)
                                 }
@@ -50,11 +51,11 @@ struct ServerOverviewView: View {
                     }
                 }
                 if snap.workspaces.isEmpty {
-                    ContentUnavailableView("Keine Workspaces", systemImage: "square.dashed",
-                                           description: Text("In dieser herdr-Session gibt es noch keine Workspaces."))
+                    ContentUnavailableView("No Workspaces", systemImage: "square.dashed",
+                                           description: Text("This herdr session has no workspaces yet."))
                 }
             } else if connecting {
-                HStack { ProgressView(); Text("Verbinde …").foregroundStyle(.secondary) }
+                HStack { ProgressView(); Text("Connecting …").foregroundStyle(.secondary) }
             }
         }
         .navigationTitle(profile?.name ?? "Server")
@@ -63,13 +64,13 @@ struct ServerOverviewView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink(value: Route.folder(server: serverId, path: nil)) {
-                    Label("Agent starten", systemImage: "plus")
+                    Label("Start Agent", systemImage: "plus")
                 }
                 .disabled(session == nil)
             }
             ToolbarItem(placement: .secondaryAction) {
                 NavigationLink(value: Route.notifications(server: serverId)) {
-                    Label("Benachrichtigungen", systemImage: "bell")
+                    Label("Notifications", systemImage: "bell")
                 }
                 .disabled(session == nil)
             }
@@ -83,14 +84,28 @@ struct ServerOverviewView: View {
         .task(id: model.reconnectToken) { await connect() }
         .safeAreaInset(edge: .bottom) {
             if let voice, session?.snapshot != nil {
-                HStack {
-                    Text("Halten zum Sprechen")
-                        .font(.caption).foregroundStyle(.secondary)
+                HStack(spacing: 10) {
+                    if !voiceHintSeen {
+                        // Shown once; goes away after the first voice command or when closed.
+                        HStack(spacing: 8) {
+                            Text("Navigate and steer your agents by voice")
+                                .font(.footnote).foregroundStyle(.secondary)
+                            Button { voiceHintSeen = true } label: { Image(systemName: "xmark.circle.fill") }
+                                .buttonStyle(.plain).foregroundStyle(.tertiary)
+                                .accessibilityLabel("Dismiss hint")
+                        }
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .background(.regularMaterial, in: Capsule())
+                        .transition(.opacity)
+                    }
                     Spacer()
                     MicButton(voice: voice)
+                        .background(.regularMaterial, in: Circle())
+                        .shadow(color: .black.opacity(0.15), radius: 6, y: 2)
                 }
-                .padding(.horizontal, 16).padding(.vertical, 8)
-                .background(.bar)
+                .padding(.horizontal, 16).padding(.bottom, 8)
+                .animation(.snappy, value: voiceHintSeen)
+                .onChange(of: voice.phase) { _, p in if p == .listening { voiceHintSeen = true } }
             }
         }
         .sheet(isPresented: Binding(get: { voice?.isActive ?? false }, set: { if !$0 { voice?.dismiss() } })) {
@@ -103,9 +118,9 @@ struct ServerOverviewView: View {
         }
         .alert("Passphrase", isPresented: $askPassphrase) {
             SecureField("Passphrase", text: $passphrase).textContentType(.password)
-            Button("Verbinden") { Task { await connect() } }
-            Button("Abbrechen", role: .cancel) { passphrase = "" }
-        } message: { Text("Der SSH-Key ist mit einer Passphrase geschützt.") }
+            Button("Connect") { Task { await connect() } }
+            Button("Cancel", role: .cancel) { passphrase = "" }
+        } message: { Text("The SSH key is protected by a passphrase.") }
     }
 
     private func connect() async {
@@ -135,18 +150,18 @@ struct ConnectionBanner: View {
         if let message {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("Verbindung fehlgeschlagen", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                    Label("Connection failed", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                     CopyableError(text: message)
                     if profile?.requiresVPN == true {
-                        Text("Dieser Server braucht VPN. Ist \(profile?.vpnApp ?? "deine VPN-App") verbunden?")
+                        Text("This server requires VPN. Is \(profile?.vpnApp ?? "your VPN app") connected?")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
-                    Button("Erneut versuchen", action: retry).buttonStyle(.bordered)
+                    Button("Try Again", action: retry).buttonStyle(.bordered)
                 }
             }
         } else if state == .polling {
             Section {
-                Label("Live-Updates nicht verfügbar – aktualisiere alle 3 Sekunden.", systemImage: "arrow.triangle.2.circlepath")
+                Label("Live updates unavailable – refreshing every 3 seconds.", systemImage: "arrow.triangle.2.circlepath")
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }

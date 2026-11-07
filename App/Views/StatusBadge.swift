@@ -4,11 +4,11 @@ import SwiftUI
 extension AgentStatus {
     var label: String {
         switch self {
-        case .idle: "bereit"
-        case .working: "arbeitet"
-        case .blocked: "wartet auf dich"
-        case .done: "fertig"
-        case .unknown: "unbekannt"
+        case .idle: "ready"
+        case .working: "working"
+        case .blocked: "needs you"
+        case .done: "done"
+        case .unknown: "unknown"
         }
     }
 

@@ -25,10 +25,10 @@ public enum NotifyError: Error, Equatable, LocalizedError {
     case pythonMissing, scriptMissing, configUnreadable, remote(String)
     public var errorDescription: String? {
         switch self {
-        case .pythonMissing: "Auf dem Server fehlt python3. Installiere es z. B. mit: sudo apt install python3"
-        case .scriptMissing: "Der Begleitdienst fehlt in der App."
-        case .configUnreadable: "Die Konfiguration auf dem Server (~/.config/herdr-notify/config.json) ist nicht lesbar. Entferne die Benachrichtigungen und richte sie neu ein."
-        case .remote(let m): "Auf dem Server ist ein Fehler aufgetreten: \(m)"
+        case .pythonMissing: "python3 is missing on the server. Install it, e.g. with: sudo apt install python3"
+        case .scriptMissing: "The notification service is missing from the app bundle."
+        case .configUnreadable: "The configuration on the server (~/.config/herdr-notify/config.json) can't be read. Remove notifications and set them up again."
+        case .remote(let m): "An error occurred on the server: \(m)"
         }
     }
 }
@@ -116,18 +116,18 @@ public struct NotifyInstaller: Sendable {
 
     /// What install() will do, shown to the user for confirmation.
     public func plannedActions(linger: Bool, cron: Bool) -> [String] {
-        var a = ["Ordner \(baseDir) anlegen (Skript, Konfiguration, Log)"]
+        var a = ["Create the folder \(baseDir) (script, configuration, log)"]
         switch Self.mode(linger: linger, cron: cron) {
         case .systemd:
-            a.append("Dienst ~/.config/systemd/user/\(name).service anlegen und starten")
+            a.append("Create and start the service ~/.config/systemd/user/\(name).service")
         case .cron:
-            a.append("Zwei Zeilen „# \(name)“ zu deiner crontab hinzufügen (Start beim Booten, Wächter jede Minute)")
-            a.append("Den Dienst sofort im Hintergrund starten")
+            a.append("Add two lines marked “# \(name)” to your crontab (start at boot, watchdog every minute)")
+            a.append("Start the service in the background right away")
         case .background, .none:
-            a.append("Den Dienst als Hintergrundprozess starten (startet sich nach Abstürzen selbst neu)")
-            a.append("Nach einem Neustart des Servers startet die App ihn beim nächsten Verbinden wieder")
+            a.append("Start the service as a background process (restarts itself after crashes)")
+            a.append("After a server reboot, the app restarts it the next time it connects")
         }
-        a.append("Kein sudo, keine Änderungen außerhalb deines Home-Verzeichnisses")
+        a.append("No sudo, no changes outside your home directory")
         return a
     }
 
@@ -235,8 +235,8 @@ public struct NotifyInstaller: Sendable {
     }
 
     public func sendTest(config c: NotifyConfig) async throws {
-        try await run("curl -fsS -m 10 -o /dev/null -H 'Title: herdr Test' -H 'Tags: bell' -d "
-                      + ShellQuote.quote("Benachrichtigungen von \(c.serverName) funktionieren.") + " "
+        try await run("curl -fsS -m 10 -o /dev/null -H 'Title: herdr test' -H 'Tags: bell' -d "
+                      + ShellQuote.quote("Notifications from \(c.serverName) are working.") + " "
                       + ShellQuote.quote(c.subscribeURL.absoluteString))
     }
 }

@@ -12,16 +12,16 @@ struct ServerListView: View {
         List {
             if model.servers.isEmpty {
                 ContentUnavailableView {
-                    Label("Noch kein Server", systemImage: "server.rack")
+                    Label("No Servers Yet", systemImage: "server.rack")
                 } description: {
                     Text(model.keys.isEmpty
-                         ? "Importiere zuerst einen SSH-Key, zum Beispiel aus deinem Passwort-Manager, und lege dann einen Server an."
-                         : "Lege deinen ersten herdr-Server an.")
+                         ? "Import an SSH key first, for example from your password manager, then add a server."
+                         : "Add your first herdr server.")
                 } actions: {
                     if model.keys.isEmpty {
-                        Button("SSH-Key importieren") { showKeys = true }.buttonStyle(.borderedProminent)
+                        Button("Import SSH Key") { showKeys = true }.buttonStyle(.borderedProminent)
                     } else {
-                        Button("Server hinzufügen") { creating = true }.buttonStyle(.borderedProminent)
+                        Button("Add Server") { creating = true }.buttonStyle(.borderedProminent)
                     }
                 }
                 .listRowBackground(Color.clear)
@@ -31,20 +31,20 @@ struct ServerListView: View {
                     ServerRow(server: server, connected: model.shell(for: server.id)?.isConnected == true)
                 }
                 .swipeActions {
-                    Button("Bearbeiten") { editing = server }.tint(.blue)
+                    Button("Edit") { editing = server }.tint(.blue)
                 }
             }
         }
         .navigationTitle("Server")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button { showKeys = true } label: { Label("SSH-Keys", systemImage: "key") }
+                Button { showKeys = true } label: { Label("SSH Keys", systemImage: "key") }
             }
             ToolbarItem(placement: .topBarLeading) {
-                Button { showSettings = true } label: { Label("Einstellungen", systemImage: "gearshape") }
+                Button { showSettings = true } label: { Label("Settings", systemImage: "gearshape") }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button { creating = true } label: { Label("Server hinzufügen", systemImage: "plus") }
+                Button { creating = true } label: { Label("Add Server", systemImage: "plus") }
                     .disabled(model.keys.isEmpty)
             }
         }
@@ -65,11 +65,11 @@ struct ServerRow: View {
                 Text(server.name).font(.headline)
                 if connected {
                     Image(systemName: "circle.fill").font(.system(size: 7)).foregroundStyle(.green)
-                        .accessibilityLabel("verbunden")
+                        .accessibilityLabel("connected")
                 }
                 if server.requiresVPN {
                     Image(systemName: "lock.shield").font(.caption).foregroundStyle(.secondary)
-                        .accessibilityLabel("braucht VPN")
+                        .accessibilityLabel("requires VPN")
                 }
             }
             Text("\(server.user)@\(server.host)").font(.caption).foregroundStyle(.secondary)
@@ -81,7 +81,7 @@ struct ServerRow: View {
                             Label("\(n)", systemImage: s.symbol).font(.caption2).foregroundStyle(s.color)
                         }
                     }
-                    Text("zuletzt bekannt").font(.caption2).foregroundStyle(.tertiary)
+                    Text("last known").font(.caption2).foregroundStyle(.tertiary)
                 }
             }
         }

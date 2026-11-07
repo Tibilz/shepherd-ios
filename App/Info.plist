@@ -32,11 +32,11 @@
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Entsperrt deine SSH-Keys.</string>
+	<string>Unlocks your SSH keys.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Für Sprachbefehle an deine Agents.</string>
+	<string>For voice commands to your agents.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Wandelt deine Sprachbefehle auf dem iPhone in Text um.</string>
+	<string>Turns your voice commands into text on your iPhone.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 </dict>

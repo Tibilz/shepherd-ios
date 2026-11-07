@@ -8,27 +8,27 @@ struct HostKeyPromptView: View {
         NavigationStack {
             Form {
                 Section {
-                    Text("Du verbindest dich zum ersten Mal mit **\(prompt.serverName)** (\(prompt.host)). Prüfe den Fingerabdruck des Servers, bevor du ihm vertraust.")
+                    Text("This is your first connection to **\(prompt.serverName)** (\(prompt.host)). Check the server fingerprint before you trust it.")
                 }
-                Section("Fingerabdruck (SHA256)") {
+                Section("Fingerprint (SHA256)") {
                     Text(prompt.fingerprint)
                         .font(.system(.footnote, design: .monospaced))
                         .textSelection(.enabled)
                 }
                 Section {
-                    Text("Auf dem Server anzeigen mit:\n`ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`")
+                    Text("Show it on the server with:\n`ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle("Neuer Server")
+            .navigationTitle("New Server")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Abbrechen", role: .cancel) { answer(false) }
+                    Button("Cancel", role: .cancel) { answer(false) }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Vertrauen") { answer(true) }
+                    Button("Trust") { answer(true) }
                 }
             }
         }

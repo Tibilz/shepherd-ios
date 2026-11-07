@@ -21,7 +21,7 @@ struct KeyTextView: UIViewRepresentable {
         v.keyboardType = .asciiCapable
         v.backgroundColor = .clear
         v.textContainerInset = UIEdgeInsets(top: 8, left: 4, bottom: 8, right: 4)
-        v.accessibilityLabel = "Privater Key"
+        v.accessibilityLabel = "Private Key"
         v.delegate = context.coordinator
         return v
     }

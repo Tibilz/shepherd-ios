@@ -67,7 +67,7 @@ public enum LaunchError: Error, Equatable, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .notInstalled(let kind, let label):
-            "\(label) ist auf dem Server nicht installiert (Programm „\(kind)“ nicht gefunden). Installiere es dort zuerst."
+            "\(label) is not installed on the server (program “\(kind)” not found). Install it there first."
         }
     }
 }

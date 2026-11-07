@@ -43,7 +43,7 @@ public final class CitadelShell: RemoteShell, @unchecked Sendable {
         do {
             auth = try SSHKeyImport.makeAuthentication(pem, kind: kind, username: profile.user, passphrase: passphrase)
         } catch {
-            throw HerdrError.transport("Der SSH-Key konnte nicht geladen werden.")
+            throw HerdrError.transport("The SSH key could not be loaded.")
         }
         do {
             let client = try await SSHClient.connect(
@@ -52,7 +52,7 @@ public final class CitadelShell: RemoteShell, @unchecked Sendable {
                 reconnect: .never, connectTimeout: .seconds(10))
             return CitadelShell(client: client)
         } catch is HostKeyRejected {
-            throw HerdrError.transport("Host-Key nicht vertraut")
+            throw HerdrError.transport("Host key not trusted")
         } catch let e as HerdrError {
             throw e
         } catch {
@@ -62,10 +62,10 @@ public final class CitadelShell: RemoteShell, @unchecked Sendable {
 
     static func describe(_ error: Error) -> String {
         let s = String(describing: error)
-        if s.contains("HostKeyRejected") { return "Host-Key nicht vertraut" }
-        if s.contains("allAuthenticationOptionsFailed") { return "Anmeldung abgelehnt – ist der öffentliche Key in authorized_keys eingetragen?" }
-        if s.lowercased().contains("timeout") || s.contains("timedOut") { return "Zeitüberschreitung – Server nicht erreichbar (VPN aktiv?)" }
-        if s.contains("connectionRefused") || s.contains("Connection refused") { return "Verbindung abgelehnt" }
+        if s.contains("HostKeyRejected") { return "Host key not trusted" }
+        if s.contains("allAuthenticationOptionsFailed") { return "Login rejected – is the public key in authorized_keys?" }
+        if s.lowercased().contains("timeout") || s.contains("timedOut") { return "Timed out – server unreachable (VPN on?)" }
+        if s.contains("connectionRefused") || s.contains("Connection refused") { return "Connection refused" }
         return s
     }
 

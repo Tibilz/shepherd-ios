@@ -69,7 +69,7 @@ public actor HerdrClient {
     // MARK: - Raw call
 
     func call<T: Decodable>(_ method: String, _ params: [String: JSONValue] = [:], as: T.Type) async throws -> T {
-        guard let socket = status?.socket else { throw HerdrError.transport("Nicht verbunden") }
+        guard let socket = status?.socket else { throw HerdrError.transport("Not connected") }
         let req = HerdrRequest(id: "app-\(nextId)", method: method, params: params)
         nextId += 1
         let res = try await shell.exec(SocketCommand.login(try SocketCommand.oneShot(req, socket: socket)))
@@ -85,7 +85,7 @@ public actor HerdrClient {
         if e.contains("no such file") || e.contains("connection refused") { return .notRunning }
         if e.contains("invalid option") || e.contains("illegal option") || e.contains("nc: command not found")
             || e.contains("nc: not found") || e.contains("usage: nc") { return .netcatMissing }
-        return .transport(stderr.isEmpty ? "Keine Antwort vom herdr-Socket" : stderr)
+        return .transport(stderr.isEmpty ? "No response from the herdr socket" : stderr)
     }
 
     private struct Ack: Decodable { let type: String? }

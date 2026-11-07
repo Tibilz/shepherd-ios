@@ -93,7 +93,7 @@ let threeAgents = [
     }
 
     @Test func emptyTranscriptIsUnknown() {
-        #expect(LocalIntentParser.parse("  ", context: inAgent(0)) == .unknown(question: "Ich habe nichts verstanden."))
+        #expect(LocalIntentParser.parse("  ", context: inAgent(0)) == .unknown(question: "I didn't catch that."))
     }
 }
 
@@ -184,7 +184,19 @@ func claudePrompt(_ command: String) throws -> String {
         let prompt = try claudePrompt(try #require(shell.commands.last))
         #expect(prompt.contains("reviewer"))
         #expect(prompt.contains("/home/ubuntu/app"))
-        #expect(prompt.contains("nur den Typ „shell“"))
+        #expect(prompt.contains("only with type \"shell\""))
+    }
+
+    @Test func repliesInTheConfiguredLanguage() async throws {
+        let shell = FakeShell()
+        shell.execHandlers = [("claude", claudeJSON(nil, result: "ok"))]
+        _ = try await ClaudeAssistant(shell: shell, language: "German").summarize(agentOutput: "x", agentName: "a")
+        #expect(try claudePrompt(try #require(shell.commands.last)).contains("in German"))
+        _ = try await ClaudeAssistant(shell: shell).summarize(file: "/tmp/a.txt")
+        #expect(try claudePrompt(try #require(shell.commands.last)).contains("in English"))
+        shell.execHandlers = [("claude", claudeJSON(#"{"type":"unknown","question":"?"}"#))]
+        _ = try await ClaudeAssistant(shell: shell, language: "German").interpret("x", context: ctx, forceShell: false)
+        #expect(try claudePrompt(try #require(shell.commands.last)).contains("short clarifying question in German"))
     }
 
     @Test func agentSummaryUsesSonnetWithoutTools() async throws {

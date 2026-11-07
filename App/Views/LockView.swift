@@ -10,7 +10,7 @@ struct LockView: View {
                 .font(.system(size: 64))
                 .foregroundStyle(.tint)
             Text("herdr").font(.largeTitle.bold())
-            Text("Entsperre die App, um deine SSH-Keys zu nutzen.")
+            Text("Unlock the app to use your SSH keys.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
             if let err = model.lock.lastError {
@@ -20,7 +20,7 @@ struct LockView: View {
             Button {
                 Task { await model.lock.unlock() }
             } label: {
-                Label("Entsperren", systemImage: "faceid").frame(maxWidth: .infinity)
+                Label("Unlock", systemImage: "faceid").frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)

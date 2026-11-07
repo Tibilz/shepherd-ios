@@ -30,8 +30,8 @@ struct TerminalScreen: View {
                     .id(generation)
                     .ignoresSafeArea(.container, edges: .bottom)
             } else {
-                ContentUnavailableView("Nicht verbunden", systemImage: "bolt.horizontal.circle",
-                                       description: Text("Öffne zuerst die Server-Übersicht, um eine Verbindung aufzubauen."))
+                ContentUnavailableView("Not connected", systemImage: "bolt.horizontal.circle",
+                                       description: Text("Open the server overview first to connect."))
             }
         }
         .background(Color.black)
@@ -45,14 +45,14 @@ struct TerminalScreen: View {
             if case .agent = target {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
-                        Button("Übernehmen (andere Clients trennen)") { takeover = true; generation += 1 }
-                        Button("Neu verbinden") { generation += 1 }
+                        Button("Take over (disconnect other clients)") { takeover = true; generation += 1 }
+                        Button("Reconnect") { generation += 1 }
                     } label: { Image(systemName: "ellipsis.circle") }
                 }
             }
         }
         .alert("Terminal", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-            Button("Kopieren") { if let error { ErrorReport.copy(error) } }
+            Button("Copy") { if let error { ErrorReport.copy(error) } }
             Button("OK", role: .cancel) {}
         } message: { Text(error ?? "") }
     }
@@ -121,7 +121,7 @@ struct TerminalHost: UIViewRepresentable {
                     for try await chunk in pty.output {
                         self.view?.feed(byteArray: ArraySlice([UInt8](chunk)))
                     }
-                    self.view?.feed(text: "\r\n[Verbindung beendet]\r\n")
+                    self.view?.feed(text: "\r\n[Connection closed]\r\n")
                 } catch {
                     if !Task.isCancelled { self.onError(ErrorReport.text(error)) }
                 }

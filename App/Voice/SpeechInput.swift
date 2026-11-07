@@ -19,7 +19,11 @@ final class SpeechInput {
     /// Bumped by stop/cancel; a start() that resumes after an await with an old value gives up.
     private var generation = 0
 
-    static var localeIdentifier: String { UserDefaults.standard.string(forKey: "voiceLocale") ?? "de-DE" }
+    static var localeIdentifier: String { UserDefaults.standard.string(forKey: "voiceLocale") ?? defaultLocale }
+    /// German phones default to German voice input, everything else to English.
+    static var defaultLocale: String { Locale.preferredLanguages.first?.hasPrefix("de") == true ? "de-DE" : "en-US" }
+    /// Language Claude answers in (explanations, questions, summaries).
+    static var languageName: String { localeIdentifier.hasPrefix("de") ? "German" : "English" }
 
     func start(contextualStrings: [String]) async {
         guard state == .idle || isFailed else { return }
@@ -31,19 +35,19 @@ final class SpeechInput {
         func stillWanted() throws { if gen != generation { throw CancellationError() } }
         do {
             guard await AVAudioApplication.requestRecordPermission() else {
-                throw Problem("Kein Mikrofon-Zugriff. Erlaube ihn in Einstellungen → herdr → Mikrofon.")
+                throw Problem("No microphone access. Allow it in Settings → herdr → Microphone.")
             }
             try stillWanted()
             guard await Self.speechAuthorized() else {
-                throw Problem("Keine Erlaubnis für Spracherkennung. Erlaube sie in Einstellungen → herdr.")
+                throw Problem("No permission for speech recognition. Allow it in Settings → herdr.")
             }
             guard let locale = await DictationTranscriber.supportedLocale(equivalentTo: Locale(identifier: Self.localeIdentifier)) else {
-                throw Problem("Diese Sprache wird für die Spracherkennung nicht unterstützt.")
+                throw Problem("This language is not supported for speech recognition.")
             }
             try stillWanted()
             let t = DictationTranscriber(locale: locale, preset: .progressiveShortDictation)
             if let req = try await AssetInventory.assetInstallationRequest(supporting: [t]) {
-                state = .preparing("Sprachmodell wird von iOS geladen …")
+                state = .preparing("iOS is downloading the speech model …")
                 try await req.downloadAndInstall()
             }
             try stillWanted()
@@ -54,7 +58,7 @@ final class SpeechInput {
                 try await a.setContext(ctx)
             }
             guard let format = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [t]) else {
-                throw Problem("Kein passendes Audioformat für die Spracherkennung.")
+                throw Problem("No suitable audio format for speech recognition.")
             }
             try await a.prepareToAnalyze(in: format)
             try stillWanted()

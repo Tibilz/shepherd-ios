@@ -111,16 +111,16 @@ private struct RenameChat: ViewModifier {
             .onChange(of: agent?.paneId) { _, _ in
                 if let agent { editing = agent; text = agent.label ?? "" }
             }
-            .alert("Chat umbenennen", isPresented: Binding(get: { agent != nil }, set: { if !$0 { agent = nil } })) {
+            .alert("Rename Chat", isPresented: Binding(get: { agent != nil }, set: { if !$0 { agent = nil } })) {
                 TextField(editing?.chatTitle ?? editing?.displayName ?? "Name", text: $text)
-                Button("Sichern") { save(text) }
-                if editing?.label != nil { Button("Name entfernen", role: .destructive) { save(nil) } }
-                Button("Abbrechen", role: .cancel) {}
+                Button("Save") { save(text) }
+                if editing?.label != nil { Button("Remove Name", role: .destructive) { save(nil) } }
+                Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Leer lassen, um den Titel von \(editing?.kindLabel ?? "Claude") zu zeigen. Der Name erscheint auch in herdr auf dem Desktop.")
+                Text("Leave empty to show the title from \(editing?.kindLabel ?? "Claude"). The name also appears in herdr on your desktop.")
             }
-            .alert("Umbenennen fehlgeschlagen", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-                Button("Kopieren") { if let error { ErrorReport.copy(error) } }
+            .alert("Rename failed", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+                Button("Copy") { if let error { ErrorReport.copy(error) } }
                 Button("OK", role: .cancel) {}
             } message: { Text(error ?? "") }
     }

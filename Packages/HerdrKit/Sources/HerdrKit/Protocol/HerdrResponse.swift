@@ -11,13 +11,13 @@ public enum HerdrError: Error, Equatable, Sendable, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .server(let code, let message): "herdr meldet einen Fehler (\(code)): \(message)"
-        case .notRunning: "Der herdr-Server läuft auf diesem Server nicht."
-        case .herdrNotFound: "herdr wurde auf dem Server nicht gefunden. Prüfe den herdr-Pfad in den Server-Einstellungen."
-        case .protocolMismatch(let v): "Die herdr-Version auf dem Server (\(v)) passt nicht zu dieser App."
-        case .transport(let m): "Verbindungsproblem: \(m)"
-        case .decoding(let m): "Unerwartete Antwort von herdr: \(m)"
-        case .netcatMissing: "Auf dem Server fehlt ein passendes netcat. Installiere es mit: sudo apt install netcat-openbsd"
+        case .server(let code, let message): "herdr reported an error (\(code)): \(message)"
+        case .notRunning: "The herdr server is not running on this machine."
+        case .herdrNotFound: "herdr was not found on the server. Check the herdr path in the server settings."
+        case .protocolMismatch(let v): "The herdr version on the server (\(v)) does not match this app."
+        case .transport(let m): "Connection problem: \(m)"
+        case .decoding(let m): "Unexpected response from herdr: \(m)"
+        case .netcatMissing: "The server lacks a suitable netcat. Install it with: sudo apt install netcat-openbsd"
         }
     }
 }
@@ -34,7 +34,7 @@ public enum HerdrResponse {
             throw HerdrError.decoding(String(describing: error))
         }
         if let e = env.error { throw HerdrError.server(code: e.code, message: e.message) }
-        guard let r = env.result else { throw HerdrError.decoding("Antwort ohne result") }
+        guard let r = env.result else { throw HerdrError.decoding("response without result") }
         return r
     }
 }

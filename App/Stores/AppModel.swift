@@ -23,10 +23,10 @@ enum ConnectError: Error, LocalizedError, Equatable {
     case missingKey, needsPassphrase, hostKeyChanged(String)
     var errorDescription: String? {
         switch self {
-        case .missingKey: "Für diesen Server ist kein SSH-Key hinterlegt."
-        case .needsPassphrase: "Bitte gib die Passphrase des SSH-Keys ein."
+        case .missingKey: "No SSH key is set for this server."
+        case .needsPassphrase: "Please enter the passphrase of the SSH key."
         case .hostKeyChanged(let host):
-            "Achtung: Der Host-Key von \(host) hat sich geändert. Das kann ein Angriff sein. Die Verbindung wurde abgebrochen."
+            "Warning: the host key of \(host) has changed. This can mean an attack. The connection was closed."
         }
     }
 }
@@ -103,7 +103,7 @@ final class AppModel {
     @discardableResult
     func importKey(label: String, pem: String, passphrase: String?, rememberPassphrase: Bool) throws -> (StoredKeyRef, ParsedKey) {
         let parsed = try SSHKeyImport.parse(pem, passphrase: passphrase)
-        let ref = StoredKeyRef(id: UUID(), label: label.isEmpty ? "SSH-Key" : label, kind: parsed.kind,
+        let ref = StoredKeyRef(id: UUID(), label: label.isEmpty ? "SSH Key" : label, kind: parsed.kind,
                                publicKeyOpenSSH: parsed.publicKeyOpenSSH, fingerprintSHA256: parsed.fingerprintSHA256,
                                hasPassphrase: parsed.isEncrypted)
         try keyStore.save(pem: pem, passphrase: rememberPassphrase ? passphrase : nil, for: ref.id)
@@ -265,7 +265,7 @@ final class AppModel {
     private(set) var notifyStatus: [UUID: NotifyStatus] = [:]
 
     private func installer(_ serverId: UUID) throws -> NotifyInstaller {
-        guard let shell = shell(for: serverId), shell.isConnected else { throw HerdrError.transport("Nicht verbunden") }
+        guard let shell = shell(for: serverId), shell.isConnected else { throw HerdrError.transport("Not connected") }
         return NotifyInstaller(shell: shell)
     }
 
@@ -281,7 +281,7 @@ final class AppModel {
 
     func installNotify(_ serverId: UUID) async throws -> NotifyMode {
         guard let profile = server(serverId), let session = liveSession(for: serverId),
-              let socket = await session.client.status?.socket else { throw HerdrError.transport("Nicht verbunden") }
+              let socket = await session.client.status?.socket else { throw HerdrError.transport("Not connected") }
         // Never silently replace an existing topic: the user's ntfy subscription would go quiet.
         let inst = try installer(serverId)
         let existing = try await inst.readConfig()
