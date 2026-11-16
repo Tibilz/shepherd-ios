@@ -1,8 +1,17 @@
+> [!WARNING]
+> **Deprecated – this project is no longer maintained.**
+> herdr now has an **official mobile app**. Please use it instead:
+> - iPhone / iPad: [App Store](https://apps.apple.com/app/id6828898364)
+> - Android: [Google Play](https://play.google.com/store/apps/details?id=dev.herdr.app)
+> - Overview: [herdr.dev/mobile](https://herdr.dev/mobile/) · Source: [herdrdev/herdr-app](https://github.com/herdrdev/herdr-app)
+>
+> Shepherd stays here for reference only. Issues and pull requests won't be worked on.
+
 <p align="center"><img src="App/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="120" alt="Shepherd app icon"></p>
 
 <h1 align="center">Shepherd</h1>
 
-<p align="center"><strong>An unofficial iPhone client for herdr</strong></p>
+<p align="center"><strong>An unofficial iPhone client for herdr</strong> · <em>deprecated, see the official app above</em></p>
 
 <p align="center">Keep an eye on your <a href="https://herdr.dev">herdr</a> agents (Claude Code, Codex, …) on the go: connect over SSH, read chats, reply, approve – even by voice.</p>
 
